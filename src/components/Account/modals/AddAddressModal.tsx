@@ -1,10 +1,7 @@
-// src/components/Account/modals/AddAddressModal.tsx
-
 import React, { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import useUser from '../../../hooks/useUser';
 import { Address } from '../../../types/account';
-import styles from '../../../styles/Account/AddAddressModal.module.css';
 
 interface AddAddressModalProps {
   show: boolean;
