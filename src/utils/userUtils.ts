@@ -1,6 +1,4 @@
-// src/utils/userUtils.ts
-
-import { User, Order, Address, PaymentMethod, AccountSettings } from '../types/account';
+import { User } from '../types/account';
 
 // Load users from Local Storage
 export const loadUsers = (): User[] => {

@@ -1,10 +1,7 @@
-// src/components/Account/modals/AddPaymentModal.tsx
-
 import React, { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import useUser from '../../../hooks/useUser';
 import { PaymentMethod } from '../../../types/account';
-import styles from '../../../styles/Account/AddPaymentModal.module.css';
 
 interface AddPaymentModalProps {
   show: boolean;

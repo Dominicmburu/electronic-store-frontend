@@ -1,9 +1,6 @@
-// src/components/Account/modals/OrderDetailsModal.tsx
-
 import React from 'react';
 import { Modal, Button, Table, Image } from 'react-bootstrap';
 import { Order } from '../../../types/account';
-import styles from '../../../styles/Account/OrderDetailsModal.module.css';
 
 interface OrderDetailsModalProps {
   show: boolean;

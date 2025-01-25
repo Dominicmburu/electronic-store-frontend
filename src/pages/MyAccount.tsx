@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tabs, Tab, Container } from 'react-bootstrap';
 import Profile from '../components/Account/Profile';
 import OrderHistory from '../components/Account/OrderHistory';

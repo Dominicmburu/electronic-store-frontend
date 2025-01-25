@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const NavBar = () => {
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(5); // You can dynamically update this count
+  const [cartItemCount] = useState(5); // You can dynamically update this count
   const location = useLocation(); // Get the current route location
 
   const handleCloseNavbar = () => {

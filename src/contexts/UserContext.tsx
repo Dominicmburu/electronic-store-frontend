@@ -1,10 +1,7 @@
-// src/contexts/UserContext.tsx
-
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { User, Address, PaymentMethod, AccountSettings } from '../types/account';
+import { User, Address, PaymentMethod } from '../types/account';
 import {
   loadUsers,
-  saveUsers,
   getLoggedInUser,
   setLoggedInUser,
   clearLoggedInUser,

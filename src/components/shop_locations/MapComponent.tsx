@@ -1,9 +1,9 @@
 // src/components/MapComponent.tsx
 
-import React, { useRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { GoogleMap, useLoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { Store } from '../../types/stores';
-import { useState, useImperativeHandle, forwardRef } from 'react';
+import { useState } from 'react';
 
 const mapContainerStyle = {
   width: '100%',

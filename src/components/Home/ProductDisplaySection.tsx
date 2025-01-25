@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from '../../styles/ProductDisplaySection.module.css';
 import { Link } from 'react-router-dom';
 
 interface ProductCardProps {
