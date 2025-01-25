@@ -1,0 +1,11 @@
+/* src/styles/ShareButtons.module.css */
+
+.shareButtons a {
+    color: inherit;
+    transition: color 0.3s;
+  }
+  
+  .shareButtons a:hover {
+    color: #000;
+  }
+  

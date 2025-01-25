@@ -1,0 +1,11 @@
+/* src/styles/Footer.module.css */
+
+.footer-links {
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  .footer-links:hover {
+    text-decoration: underline;
+  }
+  

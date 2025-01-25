@@ -1,0 +1,69 @@
+.heroSection {
+  position: relative;
+  background: url('/assets/banner.jpeg') center center/cover no-repeat;
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.heroContent h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.heroContent p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.btnShop {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 36px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 10px;  
+  text-decoration: none;  
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  cursor: pointer;
+}
+
+.btnShop i {
+  margin-right: 8px;  
+}
+
+.btnShop:hover {
+  background-color: #0b5ed7;  
+  transform: translateY(-3px);  
+}
+
+.btnShop:focus {
+  outline: 2px solid #0d6efd;  
+  outline-offset: 4px;
+}
+
+.btnShop:active {
+  background-color: #0a58ca;  
+  transform: translateY(0);  
+}

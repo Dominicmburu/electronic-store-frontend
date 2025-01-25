@@ -1,0 +1,40 @@
+.latestProductCard {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+  }
+  
+  .latestProductCard:hover {
+    transform: translateY(-10px);
+  }
+  
+  .product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+  
+  .product-price {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #0d6efd;
+  }
+
+  #old-price {
+    color: rgb(255, 0, 170);
+    margin-right: 10px;
+  }
+  
+  .product-price .old-price {
+    text-decoration: line-through;
+    margin-right: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .new-price {
+    color: #0d6efd;
+  }
+  

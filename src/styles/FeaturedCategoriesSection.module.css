@@ -1,0 +1,10 @@
+/* src/styles/FeaturedCategoriesSection.module.css */
+
+.categoryCard {
+    transition: transform 0.3s;
+  }
+  
+  .categoryCard:hover {
+    transform: translateY(-10px);
+  }
+  

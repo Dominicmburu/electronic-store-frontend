@@ -1,0 +1,19 @@
+/* src/styles/Account/AccountPage.module.css */
+
+.accountPage {
+    /* General styles for the account page */
+  }
+  
+  .account-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  /* Responsive Adjustments */
+  @media (min-width: 768px) {
+    .account-container {
+      flex-direction: row;
+    }
+  }
+  

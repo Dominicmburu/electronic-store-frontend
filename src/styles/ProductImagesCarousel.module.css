@@ -1,0 +1,7 @@
+/* src/styles/ProductImagesCarousel.module.css */
+
+.carousel {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  

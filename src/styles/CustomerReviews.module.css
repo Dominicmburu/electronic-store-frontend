@@ -1,0 +1,11 @@
+/* src/styles/CustomerReviews.module.css */
+
+.customerReviews {
+    /* Add specific styles if needed */
+  }
+  
+  .review {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+  }
+  

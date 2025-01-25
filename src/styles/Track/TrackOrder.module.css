@@ -1,0 +1,142 @@
+.trackOrderContainer {
+  background-color: #f8f9fa;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.trackOrderForm label {
+  font-weight: bold;
+}
+
+.orderStatus {
+  margin-top: 30px;
+}
+.orderStatus h4 {
+  margin-bottom: 20px;
+}
+
+.orderDetails {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+.orderDetails table {
+  width: 100%;
+}
+.orderDetails th,
+.orderDetails td {
+  padding: 10px;
+  text-align: left;
+}
+
+.orderProgress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+}
+.orderProgress::before {
+  content: "";
+  position: absolute;
+  top: 25px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #ddd;
+  z-index: 0;
+}
+.orderProgress div {
+  text-align: center;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.orderProgress .completed::before {
+  content: "\f00c";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: #28a745;
+  display: block;
+  margin: 0 auto 10px;
+  font-size: 1.5rem;
+}
+.orderProgress .current::before {
+  content: "\f021";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: #ffc107;
+  display: block;
+  margin: 0 auto 10px;
+  font-size: 1.5rem;
+}
+.orderProgress .pending::before {
+  content: "\f0c1";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: #6c757d;
+  display: block;
+  margin: 0 auto 10px;
+  font-size: 1.5rem;
+}
+
+.orderItemsTable th,
+.orderItemsTable td {
+  vertical-align: middle !important;
+}
+.orderItemsTable img {
+  width: 80px;
+  height: auto;
+  object-fit: contain;
+}
+.orderItemsTable .itemName {
+  max-width: 200px;
+}
+
+@media (max-width: 576px) {
+  .orderItemsTable img {
+    width: 60px;
+  }
+  .orderItemsTable .itemName {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .orderProgress {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .orderProgress::before {
+    display: none;
+  }
+  .orderProgress div:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 35px;
+    left: 25px;
+    width: 2px;
+    height: 100%;
+    background-color: #ddd;
+    z-index: -1;
+  }
+  .orderDetails th,
+  .orderDetails td {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 576px) {
+  .orderProgress {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .orderProgress div {
+    margin-bottom: 20px;
+  }
+  .orderProgress::before {
+    display: none;
+  }
+}

@@ -1,0 +1,12 @@
+/* src/styles/NewsletterSection.module.css */
+
+.newsletterSection {
+    background-color: #f8f9fa;
+    padding: 40px 0;
+    text-align: center;
+  }
+  
+  .newsletterSection h2 {
+    margin-bottom: 20px;
+  }
+  

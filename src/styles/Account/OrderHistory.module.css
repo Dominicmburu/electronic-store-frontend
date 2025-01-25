@@ -1,0 +1,31 @@
+/* src/styles/Account/AuthSection.module.css */
+
+.authButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  border-radius: 50px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .authButton {
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 16px;
+  }
+}
+
+/* src/styles/Account/OrderHistory.module.css */
+
+.orderHistoryCard {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.orderHistoryCard .table th, .orderHistoryCard .table td {
+  vertical-align: middle;
+}
+

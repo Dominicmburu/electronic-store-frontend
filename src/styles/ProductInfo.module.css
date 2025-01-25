@@ -1,0 +1,29 @@
+/* src/styles/ProductInfo.module.css */
+
+.productInfo {
+    /* Add specific styles if needed */
+  }
+  
+  .priceSection {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .currentPrice {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+    margin-right: 15px;
+  }
+  
+  .oldPrice {
+    font-size: 1.2rem;
+    text-decoration: line-through;
+    color: #888;
+  }
+  
+  .addToCartForm {
+    margin-top: 20px;
+  }
+  

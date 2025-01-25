@@ -1,0 +1,57 @@
+.checkoutContainer {
+  background-color: #f8f9fa;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.checkoutTabs .nav-link {
+  font-weight: bold;
+  color: #6c757d;
+}
+
+.checkoutTabs .nav-link.active {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.orderSummary h5 {
+  font-weight: bold;
+}
+
+.orderSummary table th,
+.orderSummary table td {
+  vertical-align: middle !important;
+}
+
+.orderSummary img {
+  width: 60px;
+  height: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .checkoutContainer {
+    padding: 20px;
+  }
+
+  .orderSummary img {
+    width: 50px;
+  }
+}
+
+.btnConfirmOrder {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.btnConfirmOrder:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.formSectionHeader {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 10px;
+}

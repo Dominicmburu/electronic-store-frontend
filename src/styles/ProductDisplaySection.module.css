@@ -1,0 +1,71 @@
+.productCard {
+  transition: transform 0.3s;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.productCard:hover {
+  transform: translateY(-10px);
+}
+
+.badgeTag {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.productImg {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-right: 15px;
+}
+
+.card-body {
+  flex-grow: 1;
+}
+
+.card-text {
+  font-size: 1rem;
+  color: #555;
+}
+
+.btnShopNow {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.btnShopNow i {
+  margin-right: 8px; 
+}
+
+.btnShopNow:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-3px);
+}
+
+.btnShopNow:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 4px;
+}
+
+.btnShopNow:active {
+  background-color: #0a58ca;
+  transform: translateY(0);
+}
