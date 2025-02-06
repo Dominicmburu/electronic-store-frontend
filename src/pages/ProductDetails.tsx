@@ -1,28 +1,28 @@
-// src/pages/ProductDetails.tsx
-
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import Layout from '../components/Layout';
-import ProductImagesCarousel from '../components/Printers/ProductImagesCarousel';
-import ProductInfo from '../components/Printers/ProductInfo';
-import ProductDescription from '../components/Printers/ProductDescription';
-import ProductSpecifications from '../components/Printers/ProductSpecifications';
-import CustomerReviews from '../components/Printers/CustomerReviews';
-import RelatedProducts from '../components/Printers/RelatedProducts';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import Layout from "../components/Layout";
+import ProductImagesCarousel from "../components/Printers/ProductImagesCarousel";
+import ProductInfo from "../components/Printers/ProductInfo";
+import ProductDescription from "../components/Printers/ProductDescription";
+import ProductSpecifications from "../components/Printers/ProductSpecifications";
+import CustomerReviews from "../components/Printers/CustomerReviews";
+import RelatedProducts from "../components/Printers/RelatedProducts";
+import axios from "axios";
+import { API_BASE_URL } from "../api/main";
 
 interface Product {
   id: number;
   name: string;
   images: string[];
   currentPrice: number;
-  oldPrice: number;
+  lastPrice: number;
   discount: string;
   stock: string;
   description: string;
   specifications: { [key: string]: string };
   reviews: Review[];
   relatedProducts: RelatedProduct[];
+  categoryId: number;
 }
 
 interface Review {
@@ -36,7 +36,7 @@ interface RelatedProduct {
   id: number;
   name: string;
   image: string;
-  oldPrice: number;
+  lastPrice: number;
   currentPrice: number;
   discount: string;
 }
@@ -45,31 +45,51 @@ const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       setLoading(true);
       try {
-        // Replace with your actual API endpoint
-        const response = await axios.get(`/api/products/${id}`);
-        setProduct(response.data);
-        setError('');
+        const response = await axios.get(`${API_BASE_URL}/products/${id}`);
+
+        const apiProduct = response.data.product;
+        const mappedProduct: Product = {
+          id: apiProduct.id,
+          name: apiProduct.name,
+          images: apiProduct.images.map((img: string) => `/assets/${img}`), // Add path prefix
+          currentPrice: apiProduct.currentPrice,
+          lastPrice: apiProduct.lastPrice,
+          discount:
+            apiProduct.lastPrice && apiProduct.currentPrice
+              ? `${Math.round(
+                  ((apiProduct.lastPrice - apiProduct.currentPrice) /
+                    apiProduct.lastPrice) *
+                    100
+                )}%`
+              : "0%",
+          stock: "In Stock",
+          description: apiProduct.description,
+          specifications: apiProduct.specifications || {},
+          reviews: apiProduct.reviews || [],
+          relatedProducts: [],
+          categoryId: apiProduct.categoryId,
+        };
+
+        setProduct(mappedProduct);
+        setError("");
       } catch (err) {
-        console.error('Error fetching product details:', err);
-        setError('Failed to load product details. Please try again later.');
+        console.error("Error fetching product details:", err);
+        setError("Failed to load product details. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      fetchProductDetails();
-    }
+    if (id) fetchProductDetails();
   }, [id]);
 
   const handleAddToCart = (quantity: number) => {
-    // Implement your add to cart logic here, e.g., using Context or Redux
     alert(`Added ${quantity} item(s) to cart.`);
   };
 
@@ -88,36 +108,35 @@ const ProductDetails: React.FC = () => {
       ) : product ? (
         <div className="container my-5">
           <div className="row">
-            {/* Product Images Carousel */}
             <div className="col-md-6">
               <ProductImagesCarousel images={product.images} />
             </div>
 
-            {/* Product Information */}
             <div className="col-md-6">
               <ProductInfo
-                name={product.name}
-                currentPrice={product.currentPrice}
-                oldPrice={product.oldPrice}
-                discount={product.discount}
-                stockStatus={product.stock}
-                description={product.description}
+                name={product.name || ""}
+                currentPrice={product.currentPrice || 0}
+                lastPrice={product.lastPrice || 0}
+                discount={product.discount || "0"}
+                stockStatus={product.stock || ""}
+                description={product.description || ""}
                 onAddToCart={handleAddToCart}
               />
             </div>
           </div>
 
-          {/* Product Description */}
-          <ProductDescription fullDescription={product.description} />
+          <ProductDescription fullDescription={product.description || ""} />
 
-          {/* Product Specifications */}
-          <ProductSpecifications specifications={product.specifications} />
+          <ProductSpecifications
+            specifications={product.specifications || []}
+          />
 
-          {/* Customer Reviews */}
-          <CustomerReviews reviews={product.reviews} />
+          <CustomerReviews reviews={product.reviews || []} />
 
-          {/* Related Products */}
-          <RelatedProducts relatedProducts={product.relatedProducts} />
+          <RelatedProducts
+            currentProductId={product.id}
+            currentCategory={product.categoryId}
+          />
         </div>
       ) : (
         <div className="text-center my-5">

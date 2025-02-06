@@ -1,8 +1,8 @@
-// src/components/Printers/PrinterTypesSidebar.tsx
 import React, { useEffect, useState } from 'react';
 import styles from '../../styles/PrinterTypesSidebar.module.css';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../../api/main';
 
 interface PrinterType {
   id: number;
@@ -28,7 +28,7 @@ const PrinterTypesSidebar: React.FC = () => {
     const fetchPrinterTypes = async () => {
       try {
         const response = await axios.get<{ printerTypes: PrinterType[] }>(
-          'http://127.0.0.1:5000/api/printer-types?page=1&limit=100'
+          `${API_BASE_URL}/printer-types?page=1&limit=100`
         );
         setPrinterTypes(response.data.printerTypes);
       } catch (error) {
@@ -39,7 +39,7 @@ const PrinterTypesSidebar: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get<{ categories: Category[] }>(
-          'http://127.0.0.1:5000/api/categories?page=1&limit=100'
+          `${API_BASE_URL}/categories?page=1&limit=100`
         );
         setCategories(response.data.categories);
       } catch (error) {

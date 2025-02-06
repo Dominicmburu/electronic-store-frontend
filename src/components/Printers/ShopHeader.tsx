@@ -1,4 +1,3 @@
-// src/components/Printers/ShopHeader.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from '../../styles/ShopHeader.module.css';
 import debounce from 'lodash.debounce';
@@ -10,7 +9,6 @@ interface ShopHeaderProps {
 const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Debounce the search to wait for user to stop typing
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       onSearch(query);
@@ -20,7 +18,6 @@ const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
 
   useEffect(() => {
     debouncedSearch(searchQuery);
-    // Cleanup function
     return () => {
       debouncedSearch.cancel();
     };
@@ -34,7 +31,7 @@ const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
   return (
     <div className={`container my-4 ${styles.shopHeader}`}>
       <div className="d-flex justify-content-center">
-        <form className="d-flex w-100" onSubmit={handleSubmit}>
+        <form className="search-f flex w-100" onSubmit={handleSubmit}>
           <input
             className="form-control me-2"
             type="search"
@@ -43,9 +40,6 @@ const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button className="btn btn-outline-success" type="submit">
-            Search
-          </button>
         </form>
       </div>
     </div>

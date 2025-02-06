@@ -22,3 +22,43 @@ export interface ProductsResponse {
   totalProducts: number;
   products: Product[];
 }
+
+export interface CategoryResponse {
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    imageUrl?: string;
+    parentCategoryId?: string | null;
+    products: Product[];
+    createdAt: string;
+    updatedAt: string;
+    position: number;
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
+    status: 'active' | 'archived';
+    featured: boolean;
+    children?: Category[];
+    bannerImageUrl?: string;
+    iconUrl?: string;
+  };
+  totalProducts?: number;
+  currentPage?: number;
+  totalPages?: number;
+}
+
+// export interface Category {
+//   id: string;
+//   name: string;
+//   slug: string;
+//   description?: string;
+//   imageUrl?: string;
+//   parentCategoryId?: string | null;
+//   position: number;
+//   status: 'active' | 'archived';
+//   featured: boolean;
+//   createdAt: string;
+//   updatedAt: string;
+// }
