@@ -15,6 +15,8 @@ export const useProductFetch = () => {
   const [error, setError] = useState('');
   const [cache, setCache] = useState<{ [key: string]: { products: Product[], totalPages: number } }>({});
 
+  console.log(filteredProducts)
+
   useEffect(() => {
     const fetchProducts = async () => {
       setError('');
