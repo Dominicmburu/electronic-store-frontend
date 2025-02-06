@@ -1,5 +1,3 @@
-// src/components/ProductInfo.tsx
-
 import React, { useState } from 'react';
 import styles from '../../styles/ProductInfo.module.css';
 import { Button, Form } from 'react-bootstrap';
@@ -8,7 +6,7 @@ import ShareButtons from './ShareButtons';
 interface ProductInfoProps {
   name: string;
   currentPrice: number;
-  oldPrice: number;
+  lastPrice: number;
   discount: string;
   stockStatus: string;
   description: string;
@@ -18,7 +16,7 @@ interface ProductInfoProps {
 const ProductInfo: React.FC<ProductInfoProps> = ({
   name,
   currentPrice,
-  oldPrice,
+  lastPrice,
   discount,
   stockStatus,
   description,
@@ -36,7 +34,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       <h2>{name}</h2>
       <div className={styles.priceSection}>
         <span className={styles.currentPrice}>KSh {currentPrice.toLocaleString()}.00</span>
-        <span className={styles.oldPrice}>KSh {oldPrice.toLocaleString()}.00</span>
+        <span className={styles.lastPrice}>KSh {lastPrice.toLocaleString()}.00</span>
         <span className={`badge bg-success ms-2`}>{discount} OFF</span>
       </div>
       <p className="text-muted">{stockStatus}</p>

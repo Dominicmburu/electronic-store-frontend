@@ -1,35 +1,58 @@
-/* src/styles/RelatedProducts.module.css */
-
 .relatedProducts {
-    /* Add specific styles if needed */
-  }
-  
-  .productCard {
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 15px;
-    background-color: #fff;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  .productCard:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .badgeDiscount {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background-color: green;
-    color: white;
-    padding: 5px;
-    font-size: 0.8rem;
-    border-radius: 5px;
-  }
-  
+  margin-top: 20px;
+}
+
+.productCard {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #fff;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.productCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.badgeDiscount {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: green;
+  color: white;
+  padding: 5px;
+  font-size: 0.8rem;
+  border-radius: 5px;
+}
+
+.productCard img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.productCard h5 {
+  font-size: 1rem;
+  margin-top: 10px;
+}
+
+.productCard .price {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.productCard .old-price {
+  text-decoration: line-through;
+  color: gray;
+  font-size: 0.8rem;
+}

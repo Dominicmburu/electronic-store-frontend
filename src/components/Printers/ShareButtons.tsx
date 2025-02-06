@@ -1,5 +1,3 @@
-// src/components/ShareButtons.tsx
-
 import React from 'react';
 import styles from '../../styles/ShareButtons.module.css';
 

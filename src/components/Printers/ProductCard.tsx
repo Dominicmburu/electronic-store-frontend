@@ -8,21 +8,20 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // Calculate discount percentage
   const discountPercentage = Math.round(
     ((product.lastPrice - product.currentPrice) / product.lastPrice) * 100
   );
 
   return (
-    <div className={`card h-100 ${styles.productCard}`}>
+    <div className={` h-100 ${styles.productCardd}`}>
       {discountPercentage > 0 && (
-        <span className={`badge bg-danger ${styles.badgeDiscount}`}>
+        <span className={`${styles.badgeD}`}>
           -{discountPercentage}%
         </span>
       )}
       <Link to={`/product-details/${product.id}`} className="text-decoration-none text-dark">
         <img
-          src={`/assets/${product.images[0]}`} // Display the first image
+          src={`/assets/${product.images[0]}`}
           alt={product.name}
           className={`card-img-top ${styles.productImage}`}
         />

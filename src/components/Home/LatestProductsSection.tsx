@@ -25,7 +25,8 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({
   return (
     <div className="col-sm-6 col-md-4 col-lg-3">
       <div className={`card ${styles.latestProductCard} h-100`}>
-        <img src={image} alt={alt} className="card-img-top product-image" />
+        <img src={image} alt={alt} className="card-img-top product-image" loading='lazy' />
+        
         <div className="card-body d-flex flex-column">
           <h5 className="card-title">{title}</h5>
           <p className="card-text text-muted">{type}</p>
@@ -46,11 +47,19 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({
 
 const LatestProductsSection: React.FC = () => {
   const [latestProducts, setLatestProducts] = useState<LatestProductCardProps[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [noDataMessage, setNoDataMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchLatestProducts = async () => {
       try {
+
+        const cachedData = localStorage.getItem('latestProducts');
+        if (cachedData) {
+          setLatestProducts(JSON.parse(cachedData));
+          setIsLoading(false);
+        }
+
         const response = await fetch(productAPI.LATEST_PRINTERS, {
           method: 'GET',
           headers: {
@@ -59,7 +68,10 @@ const LatestProductsSection: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch latest products');
+          if (!cachedData) {
+            setNoDataMessage('No latest products found. Please check back later.');
+          }
+          return;
         }
 
         const data = await response.json();
@@ -76,30 +88,51 @@ const LatestProductsSection: React.FC = () => {
         }));
 
         setLatestProducts(formattedProducts);
+        setIsLoading(false);
+        localStorage.setItem('latestProducts', JSON.stringify(formattedProducts));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        if (!localStorage.getItem('latestProducts')) {
+          setNoDataMessage('No latest products found. Please check back later.');
+        }
+        setIsLoading(false);
       }
     };
 
     fetchLatestProducts();
   }, []);
 
-  if (error) {
-    return <div className="alert alert-danger">{error}</div>;
-  }
-
   return (
     <section className="latest-products-section py-5">
       <div className="container">
         <h2 className="text-center mb-4">Latest Printers</h2>
         <div className="row g-4">
-          {latestProducts.length > 0 ? (
+          {isLoading ? (
+            // Loading skeleton
+            Array.from({ length: 4 }).map((_, index) => (
+              <div className="col-sm-6 col-md-4 col-lg-3" key={index}>
+                <div className={`card ${styles.latestProductCard} h-100`}>
+                  <div className="card-img-top skeleton-image" />
+                  <div className="card-body d-flex flex-column">
+                    <h5 className="card-title skeleton-text" style={{ width: '80%' }} />
+                    <p className="card-text text-muted skeleton-text" style={{ width: '60%' }} />
+                    <div className="mt-auto">
+                      <p className="product-price mb-2">
+                        <div className="skeleton-text" style={{ width: '50%' }} />
+                        <div className="skeleton-text" style={{ width: '60%' }} />
+                      </p>
+                      <div className="skeleton-button" style={{ width: '100px' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : latestProducts.length > 0 ? (
             latestProducts.map((product, index) => (
               <LatestProductCard key={index} {...product} />
             ))
           ) : (
             <div className="col-12 text-center">
-              <p>No latest products available at the moment.</p>
+              <p>{noDataMessage || 'No latest products available at the moment.'}</p>
             </div>
           )}
         </div>

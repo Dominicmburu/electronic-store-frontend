@@ -1,5 +1,3 @@
-// src/components/ProductImagesCarousel.tsx
-
 import React from 'react';
 import { Carousel } from 'react-bootstrap';
 import styles from '../../styles/ProductImagesCarousel.module.css';
