@@ -1,5 +1,3 @@
-// src/components/ProductSpecifications.tsx
-
 import React from 'react';
 import { Table } from 'react-bootstrap';
 import styles from '../../styles/ProductSpecifications.module.css';

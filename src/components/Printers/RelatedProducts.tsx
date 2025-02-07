@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import styles from '../../styles/RelatedProducts.module.css';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api/main';
+import productAPI from '../../api/product';
 
 interface RelatedProduct {
   id: number;
@@ -78,7 +79,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, cur
               <span className={`badge bg-success ${styles.badgeDiscount}`}>
                 {product.discount}
               </span>
-              <Link to={`/product-details/${product.id}`} className="text-decoration-none text-dark">
+              <Link to={`${productAPI.PRODUCT_DETAILS}/${product.id}`} className="text-decoration-none text-dark">
                 <img src={product.image} alt={product.name} className="mb-3" />
                 <h5>{product.name}</h5>
                 <p className="price">

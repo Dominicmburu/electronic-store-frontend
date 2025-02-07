@@ -1,8 +1,6 @@
-/* src/styles/CustomerReviews.module.css */
-
-.customerReviews {
-    /* Add specific styles if needed */
-  }
+.custDate{
+  font-size: 12px;
+}
   
   .review {
     border-bottom: 1px solid #ddd;

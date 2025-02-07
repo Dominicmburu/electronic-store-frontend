@@ -131,7 +131,18 @@ const ProductDetails: React.FC = () => {
             specifications={product.specifications || []}
           />
 
-          <CustomerReviews reviews={product.reviews || []} />
+          <CustomerReviews
+            reviews={
+              product.reviews
+                ? product.reviews.map((review) => ({
+                    user: { name: review.name },
+                    createdAt: review.date,
+                    rating: review.rating,
+                    content: review.comment,
+                  }))
+                : []
+            }
+          />
 
           <RelatedProducts
             currentProductId={product.id}
