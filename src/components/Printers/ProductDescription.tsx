@@ -1,5 +1,3 @@
-// src/components/ProductDescription.tsx
-
 import React from 'react';
 import styles from '../../styles/ProductDescription.module.css';
 

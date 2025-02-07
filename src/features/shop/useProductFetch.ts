@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Product, ProductsResponse, CategoryResponse } from '../../types/product';
 import productAPI from '../../api/product';
-import { API_BASE_URL } from '../../api/main';
 import { debounce } from 'lodash';
 
 export const useProductFetch = () => {
@@ -42,7 +41,7 @@ export const useProductFetch = () => {
         setLoading(true);
         try {
           const url = selectedCategory
-            ? `${API_BASE_URL}/categories/${selectedCategory}`
+            ? `${productAPI.CATEGORIES}/${selectedCategory}`
             : productAPI.ALL_PRODUCTS(
                 currentPage,
                 productsPerPage,

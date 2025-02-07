@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from '../../styles/PrinterTypesSidebar.module.css';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { API_BASE_URL } from '../../api/main';
+import productAPI from '../../api/product';
 
 interface PrinterType {
   id: number;
@@ -28,7 +28,7 @@ const PrinterTypesSidebar: React.FC = () => {
     const fetchPrinterTypes = async () => {
       try {
         const response = await axios.get<{ printerTypes: PrinterType[] }>(
-          `${API_BASE_URL}/printer-types?page=1&limit=100`
+          `${productAPI.PRINTERSTYPE}?page=1&limit=100`
         );
         setPrinterTypes(response.data.printerTypes);
       } catch (error) {
@@ -39,7 +39,7 @@ const PrinterTypesSidebar: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get<{ categories: Category[] }>(
-          `${API_BASE_URL}/categories?page=1&limit=100`
+          `${productAPI.CATEGORIES}?page=1&limit=100`
         );
         setCategories(response.data.categories);
       } catch (error) {
@@ -59,7 +59,6 @@ const PrinterTypesSidebar: React.FC = () => {
 
   const selectedCategory = searchParams.get('category') || '';
 
-  // Group categories by printerTypeId
   const groupedCategories = printerTypes.map(type => ({
     ...type,
     categories: categories.filter(cat => cat.printerTypeId === type.id)
