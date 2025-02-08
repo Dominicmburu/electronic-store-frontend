@@ -26,10 +26,12 @@ interface Product {
 }
 
 interface Review {
-  name: string;
-  date: string;
+  user: {
+    name: string;
+  };
+  createdAt: string;
   rating: number;
-  comment: string;
+  content: string;
 }
 
 interface RelatedProduct {
@@ -131,18 +133,7 @@ const ProductDetails: React.FC = () => {
             specifications={product.specifications || []}
           />
 
-          <CustomerReviews
-            reviews={
-              product.reviews
-                ? product.reviews.map((review) => ({
-                    user: { name: review.name },
-                    createdAt: review.date,
-                    rating: review.rating,
-                    content: review.comment,
-                  }))
-                : []
-            }
-          />
+          <CustomerReviews reviews={product.reviews || []} />
 
           <RelatedProducts
             currentProductId={product.id}
