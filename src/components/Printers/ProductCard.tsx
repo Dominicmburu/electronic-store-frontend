@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../../styles/ProductCard.module.css';
 import { Product } from '../../types/product';
-import productAPI from '../../api/product';
 
 interface ProductCardProps {
   product: Product;
@@ -20,7 +19,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           -{discountPercentage}%
         </span>
       )}
-      <Link to={`${productAPI.PRODUCT_DETAILS}/${product.id}`} className="text-decoration-none text-dark">
+      <Link to={`/product-details/${product.id}`} className="text-decoration-none text-dark">
         <img
           src={`/assets/${product.images[0]}`}
           alt={product.name}
