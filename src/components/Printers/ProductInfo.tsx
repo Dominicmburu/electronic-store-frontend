@@ -33,8 +33,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     <div className={styles.productInfo}>
       <h2>{name}</h2>
       <div className={styles.priceSection}>
-        <span className={styles.currentPrice}>KSh {currentPrice.toLocaleString()}.00</span>
-        <span className={styles.lastPrice}>KSh {lastPrice.toLocaleString()}.00</span>
+        <span className={styles.currentPrice}>KSh {currentPrice.toLocaleString()}</span>
+        <span className={styles.lastPrice}>KSh {lastPrice.toLocaleString()}</span>
         <span className={`badge bg-success ms-2`}>{discount} OFF</span>
       </div>
       <p className="text-muted">{stockStatus}</p>

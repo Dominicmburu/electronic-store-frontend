@@ -1,29 +1,40 @@
-/* src/styles/ProductInfo.module.css */
+.priceSection {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+}
 
-.productInfo {
-    /* Add specific styles if needed */
-  }
-  
-  .priceSection {
-    margin: 20px 0;
-    display: flex;
-    align-items: center;
-  }
-  
-  .currentPrice {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #28a745;
-    margin-right: 15px;
-  }
-  
-  .oldPrice {
-    font-size: 1.2rem;
-    text-decoration: line-through;
-    color: #888;
-  }
-  
-  .addToCartForm {
+.currentPrice {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #28a745;
+  margin-right: 15px;
+}
+
+.oldPrice {
+  font-size: 1.2rem;
+  text-decoration: line-through;
+  color: #888;
+}
+
+.addToCartForm {
+  margin-top: 20px;
+}
+
+@media screen and (max-width: 600px) {
+  h2{
     margin-top: 20px;
   }
-  
+
+  .currentPrice {
+    font-size: 1.2rem;
+  }
+
+  .oldPrice {
+    font-size: 1rem;
+  }
+
+  .addToCartForm {
+    margin-top: 15px;
+  }
+}
