@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from '../../styles/ShopHeader.module.css';
+import { useSearchParams } from 'react-router-dom';
 import debounce from 'lodash.debounce';
 
 interface ShopHeaderProps {
@@ -7,11 +8,15 @@ interface ShopHeaderProps {
 }
 
 const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('search') || '';
+  const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
+
 
   const debouncedSearch = useCallback(
     debounce((query: string) => {
-      onSearch(query);
+      console.log('[ShopHeader] Debounced search triggered with query:', query);
+      onSearch(query.trim());
     }, 500),
     [onSearch]
   );
@@ -25,6 +30,7 @@ const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    debouncedSearch.cancel();
     onSearch(searchQuery.trim());
   };
 
@@ -38,7 +44,9 @@ const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
             placeholder="Search for products..."
             aria-label="Search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+            }}
           />
         </form>
       </div>

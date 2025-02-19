@@ -12,16 +12,25 @@ const PaginationControls: React.FC<PaginationProps> = ({
   totalPages,
   onPageChange,
 }) => {
-  const handlePrevious = () => {
-    if (currentPage > 1) onPageChange(currentPage - 1);
+  const handlePrevious = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
   };
 
-  const handleNext = () => {
-    if (currentPage < totalPages) onPageChange(currentPage + 1);
+  const handleNext = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
   };
 
-  const handlePageClick = (page: number) => {
-    if (page !== currentPage) onPageChange(page);
+  const handlePageClick = (page: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (page !== currentPage) {
+      onPageChange(page);
+    }
   };
 
   const renderPageNumbers = () => {
@@ -37,12 +46,10 @@ const PaginationControls: React.FC<PaginationProps> = ({
 
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
-        <li
-          key={i}
-          className={`page-item ${i === currentPage ? 'active' : ''}`}
-          onClick={() => handlePageClick(i)}
-        >
-          <button className="page-link">{i}</button>
+        <li key={i} className={`page-item ${i === currentPage ? 'active' : ''}`}>
+          <button className="page-link" onClick={(e) => handlePageClick(i, e)}>
+            {i}
+          </button>
         </li>
       );
     }
@@ -53,15 +60,16 @@ const PaginationControls: React.FC<PaginationProps> = ({
   return (
     <div className={`pagination-controls ${styles.paginationControls}`}>
       <ul className="pagination justify-content-center">
-        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`} onClick={handlePrevious}>
-          <button className="page-link">Previous</button>
+        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+          <button className="page-link" onClick={handlePrevious}>
+            Previous
+          </button>
         </li>
         {renderPageNumbers()}
-        <li
-          className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
-          onClick={handleNext}
-        >
-          <button className="page-link">Next</button>
+        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+          <button className="page-link" onClick={handleNext}>
+            Next
+          </button>
         </li>
       </ul>
     </div>
