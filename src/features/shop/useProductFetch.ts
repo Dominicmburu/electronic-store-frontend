@@ -1,24 +1,22 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Product, ProductsResponse, CategoryResponse } from '../../types/product';
 import productAPI from '../../api/product';
-import { debounce } from 'lodash';
 
 export const useProductFetch = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [cache, setCache] = useState<{ [key: string]: { products: Product[], totalPages: number } }>({});
-
-  console.log(filteredProducts)
+  const [cache, setCache] = useState<{ [key: string]: { products: Product[]; totalPages: number } }>({});
 
   useEffect(() => {
     const fetchProducts = async () => {
       setError('');
+
+      const searchParams = new URLSearchParams(location.search);
 
       const sortOption = searchParams.get('sort') || 'default';
       const searchQuery = searchParams.get('search') || '';
@@ -26,13 +24,16 @@ export const useProductFetch = () => {
       const currentPage = parseInt(searchParams.get('page') || '1', 10);
       const productsPerPage = 10;
 
-      let sortParam: string | undefined;
-      if (sortOption === 'price-low-high') sortParam = 'price_asc';
-      else if (sortOption === 'price-high-low') sortParam = 'price_desc';
-      else if (sortOption === 'latest') sortParam = 'createdAt_desc';
+      console.log('[useProductFetch] sortOption:', sortOption, '| searchQuery:', searchQuery, '| selectedCategory:', selectedCategory, '| currentPage:', currentPage);
 
-      const cacheKey = `${selectedCategory || 'all'}-${sortParam || 'default'}-${currentPage}`;
-      
+
+      let sortParam: string | undefined;
+      if (sortOption === 'price-low-high') sortParam = 'price-low-high';
+      else if (sortOption === 'price-high-low') sortParam = 'price-high-low';
+      else if (sortOption === 'latest') sortParam = 'latest';
+
+      const cacheKey = `${selectedCategory || 'all'}-${sortParam || 'default'}-${searchQuery || 'all'}-${currentPage}`;
+
       if (cache[cacheKey]) {
         setProducts(cache[cacheKey].products);
         setTotalPages(cache[cacheKey].totalPages);
@@ -40,15 +41,18 @@ export const useProductFetch = () => {
       } else {
         setLoading(true);
         try {
-          const url = selectedCategory
-            ? `${productAPI.CATEGORIES}/${selectedCategory}`
-            : productAPI.ALL_PRODUCTS(
-                currentPage,
-                productsPerPage,
-                sortParam,
-                searchQuery,
-                undefined
-              );
+          let url = '';
+          if (selectedCategory) {
+            url = `${productAPI.CATEGORIES}/${selectedCategory}?search=${encodeURIComponent(searchQuery)}`;
+          } else {
+            url = productAPI.ALL_PRODUCTS(
+              currentPage,
+              productsPerPage,
+              sortParam,
+              searchQuery,
+              undefined
+            );
+          }
 
           const response = await axios.get<ProductsResponse | CategoryResponse>(url);
 
@@ -64,14 +68,6 @@ export const useProductFetch = () => {
             fetchedTotalPages = productsResponse.totalPages;
           }
 
-          // if (sortOption === 'price-low-high') {
-          //   fetchedProducts = fetchedProducts.sort((a, b) => a.price - b.price);
-          // } else if (sortOption === 'price-high-low') {
-          //   fetchedProducts = fetchedProducts.sort((a, b) => b.price - a.price);
-          // } else if (sortOption === 'latest') {
-          //   fetchedProducts = fetchedProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          // }
-
           setProducts(fetchedProducts);
           setTotalPages(fetchedTotalPages);
           setCache((prevCache) => ({
@@ -79,7 +75,6 @@ export const useProductFetch = () => {
             [cacheKey]: { products: fetchedProducts, totalPages: fetchedTotalPages },
           }));
         } catch (err) {
-          console.error('Error fetching products:', err);
           setError('Failed to fetch products. Please try again later.');
         } finally {
           setLoading(false);
@@ -88,27 +83,7 @@ export const useProductFetch = () => {
     };
 
     fetchProducts();
-  }, [searchParams]);
+  }, [location.search]);
 
-  const handleSearch = useCallback(
-    debounce((query: string) => {
-      if (query.trim() === '') {
-        setFilteredProducts(products);
-      } else {
-        const filtered = products.filter((product) =>
-          product.name.toLowerCase().includes(query.toLowerCase())
-        );
-        setFilteredProducts(filtered);
-      }
-    }, 300),
-    [products]
-  );
-
-  useEffect(() => {
-    const searchQuery = searchParams.get('search') || '';
-    handleSearch(searchQuery);
-  }, [searchParams, products]);
-
-  return { products, totalPages, loading, error, setSearchParams };
-  // return { products: filteredProducts.length > 0 || searchParams.get('search') ? filteredProducts : products, totalPages, loading, error, setSearchParams };
+  return { products, totalPages, loading, error };
 };
