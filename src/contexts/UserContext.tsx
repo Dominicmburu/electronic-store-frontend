@@ -1,34 +1,28 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { User, Address, PaymentMethod } from '../types/account';
-import {
-  loadUsers,
-  getLoggedInUser,
-  setLoggedInUser,
-  clearLoggedInUser,
-  addUser,
-  updateUser,
-  validateEmail,
-  validatePhone
-} from '../utils/userUtils';
+import { User } from '../types/account';
+import { fetchUserProfile, loginUser, updateUserProfile } from './helper';
+import Cookies from 'js-cookie';
+// import axios from 'axios';
 
 interface UserContextProps {
-  user: User | null;
+  token: string | null;
+  profile: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, phone: string, password: string) => Promise<void>;
+  // register: (name: string, email: string, phone: string, password: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (name: string, email: string, phone: string, password?: string) => Promise<void>;
-  addAddress: (type: 'Shipping' | 'Billing' | 'Both', details: string) => void;
-  editAddress: (id: number, type: 'Shipping' | 'Billing' | 'Both', details: string) => void;
-  deleteAddress: (id: number) => void;
-  addPaymentMethod: (type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => void;
-  editPaymentMethod: (id: number, type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => void;
-  deletePaymentMethod: (id: number) => void;
-  addToWishlist: (productId: number) => void;
-  removeFromWishlist: (productId: number) => void;
-  updateAccountSettings: (
-    newsletter: 'Subscribed' | 'Unsubscribed',
-    notifications: 'All Notifications' | 'Email Only' | 'SMS Only' | 'No Notifications'
-  ) => void;
+  updateProfile: (name: string, email: string, phoneNumber: string, password?: string) => Promise<void>;
+  // addAddress: (type: 'Shipping' | 'Billing' | 'Both', details: string) => void;
+  // editAddress: (id: number, type: 'Shipping' | 'Billing' | 'Both', details: string) => void;
+  // deleteAddress: (id: number) => void;
+  // addPaymentMethod: (type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => void;
+  // editPaymentMethod: (id: number, type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => void;
+  // deletePaymentMethod: (id: number) => void;
+  // addToWishlist: (productId: number) => void;
+  // removeFromWishlist: (productId: number) => void;
+  // updateAccountSettings: (
+  //   newsletter: 'Subscribed' | 'Unsubscribed',
+  //   notifications: 'All Notifications' | 'Email Only' | 'SMS Only' | 'No Notifications'
+  // ) => void;
 }
 
 export const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -38,224 +32,193 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(Cookies.get('token') || null);
+  const [profile, setProfile] = useState<User | null>(null);
 
-  // Load user on mount
   useEffect(() => {
-    const loggedInUser = getLoggedInUser();
-    if (loggedInUser) {
-      setUser(loggedInUser);
-    }
-  }, []);
+    const currentToken = Cookies.get('token'); 
+    setToken(currentToken || null); 
 
-  // Login function
+    if (currentToken) {
+      const fetchUserProfileData = async () => {
+        try {
+          const profileData = await fetchUserProfile(currentToken);
+          if (profileData) {
+            setProfile(profileData); 
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          setProfile(null); 
+        }
+      };
+
+      fetchUserProfileData();
+    }
+  }, [token]);
+
   const login = async (email: string, password: string) => {
-    const users = loadUsers();
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      setLoggedInUser(foundUser);
-      setUser(foundUser);
-    } else {
+    try {
+      const { token, user } = await loginUser(email, password);
+      Cookies.set('token', token, { expires: 7, sameSite: 'Strict' });
+      setToken(token);
+      setProfile(user);
+    } catch (error) {
       throw new Error('Invalid email or password.');
     }
   };
 
-  // Register function
-  const register = async (name: string, email: string, phone: string, password: string) => {
-    if (password.length < 6) {
-      throw new Error('Password should be at least 6 characters long.');
-    }
-    if (!validateEmail(email)) {
-      throw new Error('Please enter a valid email address.');
-    }
-    if (!validatePhone(phone)) {
-      throw new Error('Please enter a valid phone number.');
-    }
+  // const register = async (name: string, email: string, phone: string, password: string) => {
+  //   try {
+  //     const response = await axios.post('https://electronic-store-backend.onrender.com/api/auth/register', {
+  //       name,
+  //       email,
+  //       phoneNumber: phone,
+  //       password,
+  //     });
 
-    const users = loadUsers();
-    const existingUser = users.find(u => u.email === email);
-    if (existingUser) {
-      throw new Error('An account with this email already exists.');
-    }
+  //     if (response.status === 201) {
+  //       const { token } = response.data;
 
-    const newUser: User = {
-      id: Date.now(),
-      name,
-      email,
-      phone,
-      password, // Note: In production, passwords should be hashed
-      orders: [],
-      addresses: [],
-      paymentMethods: [],
-      wishlist: [],
-      settings: {
-        newsletter: 'Subscribed',
-        notifications: 'All Notifications',
-      },
-    };
+  //       Cookies.set('token', token, { expires: 7, secure: true, sameSite: 'Strict' });
 
-    addUser(newUser);
-    setLoggedInUser(newUser);
-    setUser(newUser);
-  };
+  //       const userProfile = response.data.user;
+  //       setUser(userProfile);
+  //     }
+  //   } catch (error) {
+  //     throw new Error(error.response?.data?.message || 'Registration failed.');
+  //   }
+  // };
 
-  // Logout function
   const logout = () => {
-    clearLoggedInUser();
-    setUser(null);
+    Cookies.remove('token');
+    setToken(null);
+    setProfile(null);
   };
 
-  // Update Profile
-  const updateProfile = async (name: string, email: string, phone: string, password?: string) => {
-    if (!validateEmail(email)) {
-      throw new Error('Please enter a valid email address.');
-    }
-    if (!validatePhone(phone)) {
-      throw new Error('Please enter a valid phone number.');
-    }
-    if (password && password.length < 6) {
-      throw new Error('Password should be at least 6 characters long.');
+  const updateProfile = async (name: string, email: string, phoneNumber: string, password?: string) => {
+    if (!profile) throw new Error('User is not logged in.');
+    try {
+      const updatedUser = await updateUserProfile(name, email, phoneNumber, password);
+      setProfile(updatedUser);
+    } catch (error) {
+      throw new Error('Failed to update profile.');
     }
 
-    if (user) {
-      const users = loadUsers();
-      const emailTaken = users.some(u => u.email === email && u.id !== user.id);
-      if (emailTaken) {
-        throw new Error('This email is already in use by another account.');
-      }
+  // const addAddressMethod = (type: 'Shipping' | 'Billing' | 'Both', details: string) => {
+  //   if (user) {
+  //     const newAddress: Address = {
+  //       id: Date.now(),
+  //       type,
+  //       details,
+  //     };
+  //     const updatedUser = { ...user, addresses: [...user.addresses, newAddress] };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-      const updatedUser: User = {
-        ...user,
-        name,
-        email,
-        phone,
-        password: password || user.password,
-      };
+  // const editAddressMethod = (id: number, type: 'Shipping' | 'Billing' | 'Both', details: string) => {
+  //   if (user) {
+  //     const updatedAddresses = user.addresses.map(addr => addr.id === id ? { ...addr, type, details } : addr);
+  //     const updatedUser = { ...user, addresses: updatedAddresses };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-      updateUser(updatedUser);
-      setLoggedInUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
+  // const deleteAddressMethod = (id: number) => {
+  //   if (user) {
+  //     const updatedAddresses = user.addresses.filter(addr => addr.id !== id);
+  //     const updatedUser = { ...user, addresses: updatedAddresses };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-  // Address Management
-  const addAddressMethod = (type: 'Shipping' | 'Billing' | 'Both', details: string) => {
-    if (user) {
-      const newAddress: Address = {
-        id: Date.now(),
-        type,
-        details,
-      };
-      const updatedUser = { ...user, addresses: [...user.addresses, newAddress] };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
+  // const addPaymentMethodMethod = (type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => {
+  //   if (user) {
+  //     const newPaymentMethod: PaymentMethod = {
+  //       id: Date.now(),
+  //       type,
+  //       details,
+  //     };
+  //     const updatedUser = { ...user, paymentMethods: [...user.paymentMethods, newPaymentMethod] };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-  const editAddressMethod = (id: number, type: 'Shipping' | 'Billing' | 'Both', details: string) => {
-    if (user) {
-      const updatedAddresses = user.addresses.map(addr => addr.id === id ? { ...addr, type, details } : addr);
-      const updatedUser = { ...user, addresses: updatedAddresses };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
+  // const editPaymentMethodMethod = (id: number, type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => {
+  //   if (user) {
+  //     const updatedPaymentMethods = user.paymentMethods.map(pm => pm.id === id ? { ...pm, type, details } : pm);
+  //     const updatedUser = { ...user, paymentMethods: updatedPaymentMethods };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-  const deleteAddressMethod = (id: number) => {
-    if (user) {
-      const updatedAddresses = user.addresses.filter(addr => addr.id !== id);
-      const updatedUser = { ...user, addresses: updatedAddresses };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
+  // const deletePaymentMethodMethod = (id: number) => {
+  //   if (user) {
+  //     const updatedPaymentMethods = user.paymentMethods.filter(pm => pm.id !== id);
+  //     const updatedUser = { ...user, paymentMethods: updatedPaymentMethods };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-  // Payment Method Management
-  const addPaymentMethodMethod = (type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => {
-    if (user) {
-      const newPaymentMethod: PaymentMethod = {
-        id: Date.now(),
-        type,
-        details,
-      };
-      const updatedUser = { ...user, paymentMethods: [...user.paymentMethods, newPaymentMethod] };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
+  // const addToWishlistMethod = (productId: number) => {
+  //   if (user) {
+  //     if (!user.wishlist.includes(productId)) {
+  //       const updatedUser = { ...user, wishlist: [...user.wishlist, productId] };
+  //       updateUser(updatedUser);
+  //       setUser(updatedUser);
+  //     }
+  //   }
+  // };
 
-  const editPaymentMethodMethod = (id: number, type: 'Credit Card' | 'Debit Card' | 'PayPal' | 'Bank Transfer', details: string) => {
-    if (user) {
-      const updatedPaymentMethods = user.paymentMethods.map(pm => pm.id === id ? { ...pm, type, details } : pm);
-      const updatedUser = { ...user, paymentMethods: updatedPaymentMethods };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
+  // const removeFromWishlistMethod = (productId: number) => {
+  //   if (user) {
+  //     const updatedUser = { ...user, wishlist: user.wishlist.filter(id => id !== productId) };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
+  // };
 
-  const deletePaymentMethodMethod = (id: number) => {
-    if (user) {
-      const updatedPaymentMethods = user.paymentMethods.filter(pm => pm.id !== id);
-      const updatedUser = { ...user, paymentMethods: updatedPaymentMethods };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
-
-  // Wishlist Management
-  const addToWishlistMethod = (productId: number) => {
-    if (user) {
-      if (!user.wishlist.includes(productId)) {
-        const updatedUser = { ...user, wishlist: [...user.wishlist, productId] };
-        updateUser(updatedUser);
-        setUser(updatedUser);
-      }
-    }
-  };
-
-  const removeFromWishlistMethod = (productId: number) => {
-    if (user) {
-      const updatedUser = { ...user, wishlist: user.wishlist.filter(id => id !== productId) };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
-  };
-
-  // Account Settings
-  const updateAccountSettingsMethod = (
-    newsletter: 'Subscribed' | 'Unsubscribed',
-    notifications: 'All Notifications' | 'Email Only' | 'SMS Only' | 'No Notifications'
-  ) => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        settings: {
-          newsletter,
-          notifications,
-        },
-      };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-    }
+  // const updateAccountSettingsMethod = (
+  //   newsletter: 'Subscribed' | 'Unsubscribed',
+  //   notifications: 'All Notifications' | 'Email Only' | 'SMS Only' | 'No Notifications'
+  // ) => {
+  //   if (user) {
+  //     const updatedUser = {
+  //       ...user,
+  //       settings: {
+  //         newsletter,
+  //         notifications,
+  //       },
+  //     };
+  //     updateUser(updatedUser);
+  //     setUser(updatedUser);
+  //   }
   };
 
   return (
     <UserContext.Provider
-      value={{
-        user,
+      value={{        
+        token,
+        profile,
         login,
-        register,
+        // register,
         logout,
         updateProfile,
-        addAddress: addAddressMethod,
-        editAddress: editAddressMethod,
-        deleteAddress: deleteAddressMethod,
-        addPaymentMethod: addPaymentMethodMethod,
-        editPaymentMethod: editPaymentMethodMethod,
-        deletePaymentMethod: deletePaymentMethodMethod,
-        addToWishlist: addToWishlistMethod,
-        removeFromWishlist: removeFromWishlistMethod,
-        updateAccountSettings: updateAccountSettingsMethod,
+        // addAddress: addAddressMethod,
+        // editAddress: editAddressMethod,
+        // deleteAddress: deleteAddressMethod,
+        // addPaymentMethod: addPaymentMethodMethod,
+        // editPaymentMethod: editPaymentMethodMethod,
+        // deletePaymentMethod: deletePaymentMethodMethod,
+        // addToWishlist: addToWishlistMethod,
+        // removeFromWishlist: removeFromWishlistMethod,
+        // updateAccountSettings: updateAccountSettingsMethod,
       }}
     >
       {children}

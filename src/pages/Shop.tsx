@@ -18,12 +18,8 @@ const Shop: React.FC = () => {
   const sortOption = searchParams.get('sort') || 'default';
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
 
-  console.log('[Shop] Current searchParams:', Object.fromEntries(searchParams.entries()));
-  console.log('[Shop] sortOption:', sortOption, 'currentPage:', currentPage, 'Products count:', products.length);
-
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sortVal = e.target.value;
-    console.log('[Shop] Sorting changed to:', sortVal);
     updateSearchParams({
       sort: sortVal === 'default' ? '' : sortVal,
       page: '1'
@@ -43,6 +39,10 @@ const Shop: React.FC = () => {
   const handlePageChange = (page: number) => {
     updateSearchParams({ page: page.toString() });
   };
+
+  if (loading && products.length === 0) {
+    return <LoadingState />;
+  }
 
   return (
     <Layout>

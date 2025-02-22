@@ -1,11 +1,9 @@
-// src/types/account.ts
-
 export interface User {
     id: number;
     name: string;
     email: string;
-    phone: string;
-    password: string; // Note: In production, passwords should be hashed and managed securely
+    phoneNumber: string;
+    password: string; 
     orders: Order[];
     addresses: Address[];
     paymentMethods: PaymentMethod[];

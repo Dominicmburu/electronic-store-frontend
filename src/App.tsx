@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 import Shop from "./pages/Shop";
 import ProductDetails from "./pages/ProductDetails";
 import StoreLocator from "./pages/StoreLocator";
@@ -15,8 +17,19 @@ import ContactUs from "./pages/ContactUs";
 
 const AppRoutes = () => {
   return (
-    <UserProvider>
-      <Router>
+    <Router>
+      <UserProvider>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
@@ -31,8 +44,8 @@ const AppRoutes = () => {
           {/*  
         <Route path="*" element={<NotFound />} /> */}
         </Routes>
-      </Router>
-    </UserProvider>
+      </UserProvider>
+    </Router>
   );
 };
 

@@ -1,4 +1,3 @@
-// src/components/Shop/ShopStates.tsx
 import React from 'react';
 
 export const LoadingState: React.FC = () => (

@@ -15,7 +15,6 @@ const ShopHeader: React.FC<ShopHeaderProps> = ({ onSearch }) => {
 
   const debouncedSearch = useCallback(
     debounce((query: string) => {
-      console.log('[ShopHeader] Debounced search triggered with query:', query);
       onSearch(query.trim());
     }, 500),
     [onSearch]

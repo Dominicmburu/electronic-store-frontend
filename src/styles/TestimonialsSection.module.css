@@ -1,14 +1,16 @@
-/* src/styles/TestimonialsSection.module.css */
-
 .testimonialsSection img.rounded-circle {
-    object-fit: cover;
-  }
-  
-  .carousel-item h5 {
-    margin-top: 10px;
-  }
-  
-  .carousel-item p {
-    font-style: italic;
-  }
-  
+  object-fit: cover;
+}
+
+.carousel-item h5 {
+  margin-top: 10px;
+}
+
+.carousel-item p {
+  font-style: italic;
+}
+
+.carouselControlPrevIcon,
+.carouselControlNextIcon {
+    filter: invert(100%);
+}

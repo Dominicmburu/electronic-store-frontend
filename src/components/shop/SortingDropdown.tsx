@@ -4,7 +4,6 @@ const SortingDropdown: React.FC<{
   sortOption: string;
   onSortChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }> = ({ sortOption, onSortChange }) => {
-  console.log('[SortingDropdown] Render with sortOption:', sortOption);
   return (
     <div className="sorting">
       <select
@@ -12,7 +11,6 @@ const SortingDropdown: React.FC<{
         aria-label="Sort products"
         value={sortOption}
         onChange={(e) => {
-          console.log('[SortingDropdown] onChange triggered, value:', e.target.value);
           onSortChange(e);
         }}
       >

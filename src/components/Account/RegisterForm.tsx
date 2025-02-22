@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
-const Register = ({ onLogin }: { onLogin: () => void }) => {
+const Register = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -9,16 +12,58 @@ const Register = ({ onLogin }: { onLogin: () => void }) => {
         password: '',
         confirmPassword: '',
     });
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
-            alert('Passwords do not match.');
+
+        if (!formData.name || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
+            toast.error('All fields are required.');
             return;
         }
-        // Replace with actual registration logic
-        alert('Registration successful! You can now log in.');
-        onLogin();
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(formData.email)) {
+            toast.error('Please enter a valid email address.');
+            return;
+        }
+
+        const phonePattern = /^[0-9]{10}$/;
+        if (!phonePattern.test(formData.phone)) {
+            toast.error('Please enter a valid phone number.');
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            toast.error('Password must be at least 6 characters long.');
+            return;
+        }
+        
+        if (formData.password !== formData.confirmPassword) {
+            toast.error('Passwords do not match.');
+            return;
+        }        
+
+        setLoading(true);
+
+        try {
+            const response = await axios.post('https://electronic-store-backend.onrender.com/api/auth/register', {
+                name: formData.name,
+                email: formData.email,
+                phoneNumber: formData.phone,
+                password: formData.password,
+            });
+
+            if (response.status === 201) {
+                toast.success('Registration successful! You can now log in.');
+                navigate('/login');
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Registration failed.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +82,6 @@ const Register = ({ onLogin }: { onLogin: () => void }) => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        required
                     />
                 </Form.Group>
                 <Form.Group controlId="registerEmail" className="mb-3">
@@ -48,7 +92,6 @@ const Register = ({ onLogin }: { onLogin: () => void }) => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        required
                     />
                 </Form.Group>
                 <Form.Group controlId="registerPhone" className="mb-3">
@@ -59,7 +102,6 @@ const Register = ({ onLogin }: { onLogin: () => void }) => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        required
                     />
                 </Form.Group>
                 <Form.Group controlId="registerPassword" className="mb-3">
@@ -70,7 +112,6 @@ const Register = ({ onLogin }: { onLogin: () => void }) => {
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        required
                     />
                 </Form.Group>
                 <Form.Group controlId="registerConfirmPassword" className="mb-3">
@@ -81,11 +122,10 @@ const Register = ({ onLogin }: { onLogin: () => void }) => {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        required
                     />
                 </Form.Group>
-                <Button type="submit" variant="success">
-                    <i className="bi bi-person-plus-fill"></i> Register
+                <Button type="submit" variant="success" disabled={loading}>
+                    {loading ? 'Registering...' : <><i className="bi bi-person-plus-fill"></i> Register</>}
                 </Button>
             </Form>
         </>
