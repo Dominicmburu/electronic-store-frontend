@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import styles from '../../styles/LatestProductsSection.module.css';
-import { Link } from 'react-router-dom';
-import productAPI from '../../api/product';
+import React, { useEffect, useState, useMemo } from "react";
+import styles from "../../styles/LatestProductsSection.module.css";
+import { Link } from "react-router-dom";
+import productAPI from "../../api/product";
 
 interface LatestProductCardProps {
   image: string;
@@ -25,16 +25,15 @@ const LatestProductCard: React.FC<LatestProductCardProps> = ({
   return (
     <div className="col-sm-6 col-md-4 col-lg-3">
       <div className={`card ${styles.latestProductCard} h-100`}>
-        <img src={image} alt={alt} className="card-img-top product-image" loading='lazy' />
-        
+        <img src={image} alt={alt} className="card-img-top product-image" loading="lazy" />
         <div className="card-body d-flex flex-column">
           <h5 className="card-title">{title}</h5>
           <p className="card-text text-muted">{type}</p>
           <div className="mt-auto">
-            <p className="product-price mb-2">
+            <div className="product-price mb-2">
               <del id="old-price" className="old-price">{oldPrice}</del>
               <span className="new-price">{newPrice}</span>
-            </p>
+            </div>
             <Link to={link} className="btn btn-primary btn-sm">
               <i className="bi bi-cart-plus"></i> Add to Cart
             </Link>
@@ -50,26 +49,33 @@ const LatestProductsSection: React.FC = () => {
   const [noDataMessage, setNoDataMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Memoizing the `latestProducts` array to optimize performance
+  const latestProductsMemo = useMemo(() => latestProducts, [latestProducts]);
+
   useEffect(() => {
     const fetchLatestProducts = async () => {
       try {
-
-        const cachedData = localStorage.getItem('latestProducts');
+        // Check for cached data in localStorage
+        const cachedData = localStorage.getItem("latestProducts");
+        
+        // If cached data exists, use it
         if (cachedData) {
           setLatestProducts(JSON.parse(cachedData));
           setIsLoading(false);
         }
 
+        // Fetch fresh data from the API
         const response = await fetch(productAPI.LATEST_PRINTERS, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
+        // Check if the response is OK
         if (!response.ok) {
           if (!cachedData) {
-            setNoDataMessage('No latest products found. Please check back later.');
+            setNoDataMessage("No latest products found. Please check back later.");
           }
           return;
         }
@@ -89,10 +95,13 @@ const LatestProductsSection: React.FC = () => {
 
         setLatestProducts(formattedProducts);
         setIsLoading(false);
-        localStorage.setItem('latestProducts', JSON.stringify(formattedProducts));
+        
+        // Cache the fresh data in localStorage for future use
+        localStorage.setItem("latestProducts", JSON.stringify(formattedProducts));
       } catch (err) {
-        if (!localStorage.getItem('latestProducts')) {
-          setNoDataMessage('No latest products found. Please check back later.');
+        // Fallback in case of an error
+        if (!localStorage.getItem("latestProducts")) {
+          setNoDataMessage("No latest products found. Please check back later.");
         }
         setIsLoading(false);
       }
@@ -107,32 +116,32 @@ const LatestProductsSection: React.FC = () => {
         <h2 className="text-center mb-4">Latest Printers</h2>
         <div className="row g-4">
           {isLoading ? (
-            // Loading skeleton
+            // Skeleton loader for the loading state
             Array.from({ length: 4 }).map((_, index) => (
               <div className="col-sm-6 col-md-4 col-lg-3" key={index}>
                 <div className={`card ${styles.latestProductCard} h-100`}>
                   <div className="card-img-top skeleton-image" />
                   <div className="card-body d-flex flex-column">
-                    <h5 className="card-title skeleton-text" style={{ width: '80%' }} />
-                    <p className="card-text text-muted skeleton-text" style={{ width: '60%' }} />
+                    <h5 className="card-title skeleton-text" style={{ width: "80%" }} />
+                    <p className="card-text text-muted skeleton-text" style={{ width: "60%" }} />
                     <div className="mt-auto">
-                      <p className="product-price mb-2">
-                        <div className="skeleton-text" style={{ width: '50%' }} />
-                        <div className="skeleton-text" style={{ width: '60%' }} />
-                      </p>
-                      <div className="skeleton-button" style={{ width: '100px' }} />
+                      <div className="product-price mb-2">
+                        <div className="skeleton-text" style={{ width: "50%" }} />
+                        <div className="skeleton-text" style={{ width: "60%" }} />
+                      </div>
+                      <div className="skeleton-button" style={{ width: "100px" }} />
                     </div>
                   </div>
                 </div>
               </div>
             ))
-          ) : latestProducts.length > 0 ? (
-            latestProducts.map((product, index) => (
+          ) : latestProductsMemo.length > 0 ? (
+            latestProductsMemo.map((product, index) => (
               <LatestProductCard key={index} {...product} />
             ))
           ) : (
             <div className="col-12 text-center">
-              <p>{noDataMessage || 'No latest products available at the moment.'}</p>
+              <p>{noDataMessage || "No latest products available at the moment."}</p>
             </div>
           )}
         </div>

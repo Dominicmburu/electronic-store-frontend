@@ -3,7 +3,7 @@ import styles from '../../styles/TestimonialsSection.module.css';
 
 const TestimonialsSection: React.FC = () => {
   return (
-    <section className={`testimonials-section py-5 bg-light ${styles.testimonialsSection}`}>
+    <section className={`testimonials-section py-5 ${styles.testimonialsSection}`}>
       <div className="container">
         <h2 className="text-center mb-4">What Our Customers Say</h2>
         <div id="testimonialsCarousel" className="carousel slide" data-bs-ride="carousel">
@@ -46,12 +46,12 @@ const TestimonialsSection: React.FC = () => {
             </div>
           </div>
           <button
-            className="carousel-control-prev"
+            className={`carousel-control-prev ${styles.carouselControlPrev}`}
             type="button"
             data-bs-target="#testimonialsCarousel"
             data-bs-slide="prev"
           >
-            <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span className={`carousel-control-prev-icon ${styles.carouselControlPrevIcon}`} aria-hidden="true"></span>
             <span className="visually-hidden">Previous</span>
           </button>
           <button
@@ -60,7 +60,7 @@ const TestimonialsSection: React.FC = () => {
             data-bs-target="#testimonialsCarousel"
             data-bs-slide="next"
           >
-            <span className="carousel-control-next-icon" aria-hidden="true"></span>
+            <span className={`carousel-control-next-icon ${styles.carouselControlNextIcon}`} aria-hidden="true"></span>
             <span className="visually-hidden">Next</span>
           </button>
         </div>

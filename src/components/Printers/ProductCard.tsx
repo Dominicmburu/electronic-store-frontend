@@ -23,6 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <img
           src={`/assets/${product.images[0]}`}
           alt={product.name}
+          loading="lazy"
           className={`card-img-top ${styles.productImage}`}
         />
         <div className="card-body">

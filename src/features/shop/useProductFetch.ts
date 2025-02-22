@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Product, ProductsResponse, CategoryResponse } from '../../types/product';
@@ -12,78 +12,80 @@ export const useProductFetch = () => {
   const [error, setError] = useState('');
   const [cache, setCache] = useState<{ [key: string]: { products: Product[]; totalPages: number } }>({});
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setError('');
+  const fetchProducts = useCallback(async () => {
+    setError('');
 
-      const searchParams = new URLSearchParams(location.search);
+    const searchParams = new URLSearchParams(location.search);
 
-      const sortOption = searchParams.get('sort') || 'default';
-      const searchQuery = searchParams.get('search') || '';
-      const selectedCategory = searchParams.get('category') || '';
-      const currentPage = parseInt(searchParams.get('page') || '1', 10);
-      const productsPerPage = 10;
-
-      console.log('[useProductFetch] sortOption:', sortOption, '| searchQuery:', searchQuery, '| selectedCategory:', selectedCategory, '| currentPage:', currentPage);
+    const sortOption = searchParams.get('sort') || 'default';
+    const searchQuery = searchParams.get('search') || '';
+    const selectedCategory = searchParams.get('category') || '';
+    const currentPage = parseInt(searchParams.get('page') || '1', 10);
+    const productsPerPage = 10;
 
 
-      let sortParam: string | undefined;
-      if (sortOption === 'price-low-high') sortParam = 'price-low-high';
-      else if (sortOption === 'price-high-low') sortParam = 'price-high-low';
-      else if (sortOption === 'latest') sortParam = 'latest';
+    let sortParam = getSortParam(sortOption);
 
-      const cacheKey = `${selectedCategory || 'all'}-${sortParam || 'default'}-${searchQuery || 'all'}-${currentPage}`;
+    const cacheKey = `${selectedCategory || 'all'}-${sortParam || 'default'}-${searchQuery || 'all'}-${currentPage}`;
 
-      if (cache[cacheKey]) {
-        setProducts(cache[cacheKey].products);
-        setTotalPages(cache[cacheKey].totalPages);
-        setLoading(false);
+    if (cache[cacheKey]) {
+      setProducts(cache[cacheKey].products);
+      setTotalPages(cache[cacheKey].totalPages);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let url = '';
+      if (selectedCategory) {
+        url = `${productAPI.CATEGORIES}/${selectedCategory}?search=${encodeURIComponent(searchQuery)}`;
       } else {
-        setLoading(true);
-        try {
-          let url = '';
-          if (selectedCategory) {
-            url = `${productAPI.CATEGORIES}/${selectedCategory}?search=${encodeURIComponent(searchQuery)}`;
-          } else {
-            url = productAPI.ALL_PRODUCTS(
-              currentPage,
-              productsPerPage,
-              sortParam,
-              searchQuery,
-              undefined
-            );
-          }
-
-          const response = await axios.get<ProductsResponse | CategoryResponse>(url);
-
-          let fetchedProducts: Product[] = [];
-          let fetchedTotalPages = 1;
-
-          if (selectedCategory) {
-            const categoryResponse = response.data as CategoryResponse;
-            fetchedProducts = categoryResponse.category.products;
-          } else {
-            const productsResponse = response.data as ProductsResponse;
-            fetchedProducts = productsResponse.products;
-            fetchedTotalPages = productsResponse.totalPages;
-          }
-
-          setProducts(fetchedProducts);
-          setTotalPages(fetchedTotalPages);
-          setCache((prevCache) => ({
-            ...prevCache,
-            [cacheKey]: { products: fetchedProducts, totalPages: fetchedTotalPages },
-          }));
-        } catch (err) {
-          setError('Failed to fetch products. Please try again later.');
-        } finally {
-          setLoading(false);
-        }
+        url = productAPI.ALL_PRODUCTS(
+          currentPage,
+          productsPerPage,
+          sortParam,
+          searchQuery,
+          undefined
+        );
       }
-    };
 
-    fetchProducts();
+      const response = await axios.get<ProductsResponse | CategoryResponse>(url);
+
+      let fetchedProducts: Product[] = [];
+      let fetchedTotalPages = 1;
+
+      if (selectedCategory) {
+        const categoryResponse = response.data as CategoryResponse;
+        fetchedProducts = categoryResponse.category.products;
+      } else {
+        const productsResponse = response.data as ProductsResponse;
+        fetchedProducts = productsResponse.products;
+        fetchedTotalPages = productsResponse.totalPages;
+      }
+
+      setProducts(fetchedProducts);
+      setTotalPages(fetchedTotalPages);
+      setCache((prevCache) => ({
+        ...prevCache,
+        [cacheKey]: { products: fetchedProducts, totalPages: fetchedTotalPages },
+      }));
+    } catch (err) {
+      setError('Failed to fetch products. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   }, [location.search]);
 
+  useEffect(() => {
+    fetchProducts();
+  }, [location.search, fetchProducts]);
+
   return { products, totalPages, loading, error };
+};
+
+const getSortParam = (sortOption: string) => {
+  if (sortOption === 'price-low-high') return 'price-low-high';
+  if (sortOption === 'price-high-low') return 'price-high-low';
+  if (sortOption === 'latest') return 'latest';
+  return '';
 };

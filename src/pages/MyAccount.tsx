@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Tabs, Tab, Container } from 'react-bootstrap';
 import Profile from '../components/Account/Profile';
 import OrderHistory from '../components/Account/OrderHistory';
@@ -9,17 +9,23 @@ import Settings from '../components/Account/AccountSettings';
 import Login from '../components/Account/LoginForm';
 import Register from '../components/Account/RegisterForm';
 import Layout from '../components/Layout';
-// import './MyAccount.css';
+import { UserContext } from '../contexts/UserContext';
 
 const MyAccount = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { token, logout } = useContext(UserContext) || {};
+  const [activeKey, setActiveKey] = useState<string>('profile');
 
-  const handleLogin = () => {
-    setLoggedIn(true);
-  };
+  useEffect(() => {
+    if (token) {
+      setActiveKey('profile');
+    }
+  }, [token]);
 
   const handleLogout = () => {
-    setLoggedIn(false);
+    if (logout) {
+      logout();
+      setActiveKey('login');
+    }
   };
 
   return (
@@ -27,8 +33,11 @@ const MyAccount = () => {
       <Container className="my-5">
         <h2 className="mb-4">My Account</h2>
         <div className="account-container">
-          {loggedIn ? (
-            <Tabs defaultActiveKey="profile" id="account-tabs" className="account-tabs">
+          { token ? (
+            <Tabs activeKey={activeKey} 
+            id="account-tabs" 
+            onSelect={(k) => setActiveKey(k || 'profile')}
+            className="account-tabs">
               <Tab eventKey="profile" title={<><i className="bi bi-person-fill"></i> Profile</>}>
                 <Profile onLogout={handleLogout} />
               </Tab>
@@ -51,10 +60,10 @@ const MyAccount = () => {
           ) : (
             <Tabs defaultActiveKey="login" id="auth-tabs" className="account-tabs">
               <Tab eventKey="login" title={<><i className="bi bi-box-arrow-in-right"></i> Login</>}>
-                <Login onLogin={handleLogin} />
+                <Login />
               </Tab>
               <Tab eventKey="register" title={<><i className="bi bi-person-plus-fill"></i> Register</>}>
-                <Register onLogin={handleLogin} />
+                <Register />
               </Tab>
             </Tabs>
           )}
@@ -65,3 +74,4 @@ const MyAccount = () => {
 };
 
 export default MyAccount;
+
