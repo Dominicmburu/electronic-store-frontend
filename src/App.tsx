@@ -13,37 +13,49 @@ import MyAccount from "./pages/MyAccount";
 import { UserProvider } from "./contexts/UserContext";
 import Checkout from "./pages/Checkout";
 import ContactUs from "./pages/ContactUs";
+import { CartProvider } from "./contexts/cartContext";
+import { WishlistProvider } from "./contexts/wishListContext";
+import { WalletProvider } from "./contexts/WalletContext";
+import { OrderProvider } from "./contexts/OrderContext";
 // import NotFound from "./pages/NotFound";
 
 const AppRoutes = () => {
   return (
     <Router>
       <UserProvider>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product-details/:id" element={<ProductDetails />} />
-          <Route path="/store-locations" element={<StoreLocator />} />
-          <Route path="/my-account" element={<MyAccount />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/contact-us" element={<ContactUs />} />
-          <Route path="/track-order" element={<TrackOrder />} />
+        <CartProvider>
+          <WishlistProvider>
+            <WalletProvider>
+              <OrderProvider>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                />
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/product-details/:id" element={<ProductDetails />} />
+                  <Route path="/store-locations" element={<StoreLocator />} />
+                  <Route path="/my-account" element={<MyAccount />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/contact-us" element={<ContactUs />} />
+                  <Route path="/track-order/:orderNumber" element={<TrackOrder />} />
 
-          {/*  
+                  {/*  
         <Route path="*" element={<NotFound />} /> */}
-        </Routes>
+                </Routes>
+              </OrderProvider>
+            </WalletProvider>
+          </WishlistProvider>
+        </CartProvider>
       </UserProvider>
     </Router>
   );

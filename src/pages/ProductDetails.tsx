@@ -91,10 +91,6 @@ const ProductDetails: React.FC = () => {
     if (id) fetchProductDetails();
   }, [id]);
 
-  const handleAddToCart = (quantity: number) => {
-    alert(`Added ${quantity} item(s) to cart.`);
-  };
-
   return (
     <Layout>
       {loading ? (
@@ -115,14 +111,17 @@ const ProductDetails: React.FC = () => {
             </div>
 
             <div className="col-md-6">
+              {/* Pass the product object in the expected format */}
               <ProductInfo
-                name={product.name || ""}
-                currentPrice={product.currentPrice || 0}
-                lastPrice={product.lastPrice || 0}
-                discount={product.discount || "0"}
-                stockStatus={product.stock || ""}
-                description={product.description || ""}
-                onAddToCart={handleAddToCart}
+                product={{
+                  id: product.id,
+                  name: product.name,
+                  currentPrice: product.currentPrice,
+                  lastPrice: product.lastPrice,
+                  discount: product.discount,
+                  stockStatus: product.stock,
+                  description: product.description
+                }}
               />
             </div>
           </div>

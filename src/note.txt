@@ -1,0 +1,189 @@
+// Add this to your Cart.tsx component
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useOrder } from '../contexts/orderContext';
+import { Card, Badge, Button, Modal } from 'react-bootstrap';
+import { Order } from '../contexts/orderContext';
+
+// Add this section to the Cart component
+const Cart: React.FC = () => {
+  const { orders, getUserOrders } = useOrder();
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
+  const [showPendingOrdersModal, setShowPendingOrdersModal] = useState(false);
+  const navigate = useNavigate();
+
+  // Fetch orders when component mounts
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        await getUserOrders();
+      } catch (error) {
+        console.log("No orders or error fetching orders");
+      }
+    };
+
+    fetchOrders();
+  }, [getUserOrders]);
+
+  // Filter pending orders
+  useEffect(() => {
+    if (orders && orders.length > 0) {
+      const activePendingOrders = orders.filter(
+        (order) => order.status === "PENDING"
+      );
+      
+      setPendingOrders(activePendingOrders);
+      
+      // Show modal for existing orders if there are pending orders (optional)
+      if (activePendingOrders.length > 0) {
+        setShowPendingOrdersModal(true);
+      }
+    }
+  }, [orders]);
+
+  // Handle selecting a pending order
+  const handleCompleteOrder = (orderId: number) => {
+    setShowPendingOrdersModal(false);
+    // Navigate to checkout with orderId and direct to payment step
+    navigate(`/checkout?orderId=${orderId}&directPayment=true`);
+  };
+
+  return (
+    <div>
+      {/* Regular cart content */}
+      
+      {/* Show a section for pending orders if there are any */}
+      {pendingOrders.length > 0 && (
+        <Card className="mt-4 mb-4">
+          <Card.Header className="bg-light">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">Pending Orders</h5>
+              <Button 
+                variant="outline-primary"
+                size="sm"
+                onClick={() => setShowPendingOrdersModal(true)}
+              >
+                View All
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Body>
+            <p>You have {pendingOrders.length} orders waiting for payment.</p>
+            {pendingOrders.slice(0, 2).map(order => (
+              <div key={order.id} className="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                  <span className="fw-bold">Order #{order.id}</span> - 
+                  <span className="text-muted ms-2">{new Date(order.orderDate).toLocaleDateString()}</span>
+                </div>
+                <div>
+                  <Badge bg="warning" className="me-2">Pending</Badge>
+                  <Button 
+                    size="sm" 
+                    variant="primary"
+                    onClick={() => handleCompleteOrder(order.id)}
+                  >
+                    Complete Payment
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {pendingOrders.length > 2 && (
+              <div className="text-center mt-3">
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowPendingOrdersModal(true)}
+                >
+                  View {pendingOrders.length - 2} more pending orders
+                </Button>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      )}
+
+      {/* Proceed to checkout button */}
+      <div className="d-flex justify-content-end mt-4">
+        <Button 
+          variant="primary"
+          onClick={() => navigate('/checkout')}
+          disabled
+        >
+          Proceed to Checkout
+        </Button>
+      </div>
+
+      {/* Pending Orders Modal */}
+      <Modal
+        show={showPendingOrdersModal}
+        onHide={() => setShowPendingOrdersModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Your Pending Orders</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {pendingOrders.length > 0 ? (
+            <>
+              <p>You have {pendingOrders.length} pending orders that need payment.</p>
+              
+              <div className="table-responsive">
+                <table className="table table-bordered table-hover">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Order #</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingOrders.map((order) => (
+                      <tr key={order.id}>
+                        <td>{order.id}</td>
+                        <td>{new Date(order.orderDate).toLocaleDateString()}</td>
+                        <td><Badge bg="warning">Pending</Badge></td>
+                        <td>KSh {order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</td>
+                        <td>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleCompleteOrder(order.id)}
+                          >
+                            Complete Payment
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-3">
+              <i className="bi bi-check-circle-fill text-success fs-1 mb-3"></i>
+              <h5>No pending orders</h5>
+              <p className="text-muted">You don't have any orders waiting for payment</p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowPendingOrdersModal(false)}
+          >
+            Continue Shopping
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+};
+
+export default Cart;
+========================================
+
+
+https://claude.ai/chat/15753354-f550-4bb0-9767-897a68c22fc1

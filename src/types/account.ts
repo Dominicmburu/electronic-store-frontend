@@ -34,8 +34,16 @@ export interface User {
   
   export interface Address {
     id: number;
-    type: 'Shipping' | 'Billing' | 'Both';
-    details: string;
+    userId: number;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  }
+
+  export interface FetchUserAddressesResponse {
+    addresses: Address[];
   }
   
   export interface PaymentMethod {

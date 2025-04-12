@@ -3,7 +3,6 @@ import {
   FaHome,
   FaShoppingCart,
   FaStoreAlt,
-  FaTruck,
   FaPhoneAlt,
   FaUser,
   FaTimes,
@@ -11,11 +10,15 @@ import {
 import { useState } from "react";
 
 import styles from "../styles/NavBar.module.css";
+import { useCart } from "../contexts/cartContext";
 
 const NavBar = () => {
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
-  const [cartItemCount] = useState(5);
   const location = useLocation();
+  const { cart } = useCart();
+
+  const cartItemCount = cart && cart.items ? cart.items.length : 0;  // Safely access cart items
+
 
   const handleCloseNavbar = () => {
     const navbarCollapse = document.getElementById("navbarNav");
@@ -34,12 +37,11 @@ const NavBar = () => {
     location.pathname === path ? "active" : "";
 
   // Build a className for the close button that shows/hides based on isNavbarOpen
-  const closeBtnClass = `${styles.closeBtn} ${
-    isNavbarOpen ? styles.showCloseBtn : ""
-  }`;
+  const closeBtnClass = `${styles.closeBtn} ${isNavbarOpen ? styles.showCloseBtn : ""
+    }`;
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white">
+    <nav className="navbar navbar-expand-lg navbar-light bg-white" style={{ boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}>
       <div className="container-fluid">
         <a className="navbar-brand" href="#">
           <img
@@ -111,15 +113,6 @@ const NavBar = () => {
                 onClick={handleCloseNavbar}
               >
                 <FaStoreAlt className="me-2" /> Store Locations
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                to="/track-order"
-                className={`nav-link ${isActive("/track-order")}`}
-                onClick={handleCloseNavbar}
-              >
-                <FaTruck className="me-2" /> Track Order
               </Link>
             </li>
             <li className="nav-item">

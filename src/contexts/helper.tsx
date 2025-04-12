@@ -1,5 +1,4 @@
 import axios from 'axios';
-// import { User } from '../types/account';
 import Cookies from 'js-cookie';
 import { API_BASE_URL } from '../api/main';
 
@@ -34,14 +33,15 @@ export const updateUserProfile = async (
   name: string,
   email: string,
   phoneNumber: string,
-  password?: string
+  password?: string,
+  currentPassword?: string
 ) => {
   const token = Cookies.get('token');
   if (!token) throw new Error('No token found.');
   
   const response = await axios.put(
     `${API_BASE_URL}/users/profile`,
-    { name, email, phoneNumber, password },
+    { name, email, phoneNumber, password, currentPassword },
     {
       headers: {
         Authorization: `Bearer ${token}`,

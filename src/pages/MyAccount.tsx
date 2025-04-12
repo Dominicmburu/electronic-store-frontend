@@ -10,6 +10,7 @@ import Login from '../components/Account/LoginForm';
 import Register from '../components/Account/RegisterForm';
 import Layout from '../components/Layout';
 import { UserContext } from '../contexts/UserContext';
+import Wallet from '../components/Account/Wallet';
 
 const MyAccount = () => {
   const { token, logout } = useContext(UserContext) || {};
@@ -33,13 +34,16 @@ const MyAccount = () => {
       <Container className="my-5">
         <h2 className="mb-4">My Account</h2>
         <div className="account-container">
-          { token ? (
-            <Tabs activeKey={activeKey} 
-            id="account-tabs" 
-            onSelect={(k) => setActiveKey(k || 'profile')}
-            className="account-tabs">
+          {token ? (
+            <Tabs activeKey={activeKey}
+              id="account-tabs"
+              onSelect={(k) => setActiveKey(k || 'profile')}
+              className="account-tabs">
               <Tab eventKey="profile" title={<><i className="bi bi-person-fill"></i> Profile</>}>
                 <Profile onLogout={handleLogout} />
+              </Tab>
+              <Tab eventKey="wallet" title="My Wallet">
+                <Wallet />
               </Tab>
               <Tab eventKey="orders" title={<><i className="bi bi-bag-fill"></i> Order History</>}>
                 <OrderHistory />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/main';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -13,7 +13,6 @@ const Register = () => {
         confirmPassword: '',
     });
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,7 +47,7 @@ const Register = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('https://electronic-store-backend.onrender.com/api/auth/register', {
+            const response = await axios.post(`${API_BASE_URL}/auth/register`, {
                 name: formData.name,
                 email: formData.email,
                 phoneNumber: formData.phone,
@@ -57,7 +56,14 @@ const Register = () => {
 
             if (response.status === 201) {
                 toast.success('Registration successful! You can now log in.');
-                navigate('/login');
+
+                setFormData({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    password: '',
+                    confirmPassword: '',
+                });
             }
         } catch (err: any) {
             toast.error(err.response?.data?.message || 'Registration failed.');

@@ -1,4 +1,3 @@
-// src/data/stores.ts
 
 export interface Store {
     id: number;

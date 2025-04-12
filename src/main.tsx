@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'bootstrap';
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import 'leaflet/dist/leaflet.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root')!); 
 root.render(
