@@ -1,0 +1,27 @@
+/* pages/products/components/DeleteConfirmationModal.css */
+.modal-backdrop {
+    opacity: 0.5;
+}
+
+.modal-title .material-icons {
+    font-size: 1.25rem;
+    vertical-align: middle;
+}
+
+.alert .material-icons {
+    font-size: 1.25rem;
+    vertical-align: middle;
+}
+
+.btn .material-icons {
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+.modal-header {
+    border-bottom-color: #f8f9fc;
+}
+
+.modal-footer {
+    border-top-color: #f8f9fc;
+}

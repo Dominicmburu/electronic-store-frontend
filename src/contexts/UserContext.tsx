@@ -6,6 +6,9 @@ import { addPaymentMethodAPI, deletePaymentMethodAPI, fetchPaymentMethodsAPI } f
 import { addToWishlistAPI, fetchWishlistAPI, removeFromWishlistAPI } from './wishlistHelper';
 import { fetchSettingsAPI, updateSettingsAPI } from './settingsHelper';
 import Cookies from 'js-cookie';
+import axios from 'axios';
+import { API_BASE_URL } from '../api/main';
+import { useNavigate } from 'react-router-dom';
 
 interface UserContextProps {
   token: string | null;
@@ -34,7 +37,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(Cookies.get('token') || null);
   const [profile, setProfile] = useState<User | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
-
+  const navigate = useNavigate();
+  
   useEffect(() => {
     const currentToken = Cookies.get('token');
     setToken(currentToken || null);
@@ -45,7 +49,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const profileData = await fetchUserProfile(currentToken);
           setProfile(profileData);
         } catch (error) {
-          console.error('Error fetching user profile:', error);
           setProfile(null);
         }
       };
@@ -57,31 +60,50 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const methods = await fetchPaymentMethodsAPI(currentToken);
           setPaymentMethods(methods);
         } catch (error) {
-          console.error("Error fetching payment methods:", error);
+          // console.error("Error fetching payment methods:", error);
         }
       };
       fetchPayments();
 
 
     }
-  }, [token]);
+  }, [token, navigate]);
 
   const login = async (email: string, password: string) => {
     try {
       const { token, user } = await loginUser(email, password);
-      Cookies.set('token', token, { expires: 7, sameSite: 'Strict' });
+      Cookies.set('token', token, { sameSite: 'Strict' });
       setToken(token);
-      setProfile(user);
+
+      if( user.role === 'ADMIN' ) {
+        navigate('/printers/dashboard');
+      } else {
+        setProfile(user);
+      }
     } catch (error) {
       throw new Error('Invalid email or password.');
     }
   };
 
-  const logout = () => {
-    Cookies.remove('token');
-    setToken(null);
-    setProfile(null);
+  const logout = async () => {
+    const token = Cookies.get('token');
+    try {
+      if (token) {
+        await axios.post(`${API_BASE_URL}/auth/logout`, null, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        });
+      }
+    } catch (error) {
+    } finally {
+      Cookies.remove('token');
+      setToken(null);
+      setProfile(null);
+    }
   };
+  
 
   const updateProfile = async (name: string, email: string, phoneNumber: string, password?: string, currentPassword?: string) => {
     if (!profile) throw new Error('User is not logged in.');
@@ -130,7 +152,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const methods = await fetchPaymentMethodsAPI(token);
       setPaymentMethods(methods);
     } catch (error) {
-      console.error('Failed to fetch payment methods:', error);
+      // console.error('Failed to fetch payment methods:', error);
     }
   };
 
@@ -175,7 +197,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await fetchWishlistAPI(token);
       return response;  
     } catch (error) {
-      console.error("Error fetching wishlist:", error);
+      // console.error("Error fetching wishlist:", error);
     }
   };
 
@@ -195,7 +217,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const settings = await fetchSettingsAPI(token);
       return settings; 
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      // console.error('Error fetching settings:', error);
     }
   };
 

@@ -4,7 +4,6 @@ import { Button, Form } from 'react-bootstrap';
 import ShareButtons from './ShareButtons';
 import { useCart } from '../../contexts/cartContext';
 import { useWishlist } from '../../contexts/wishListContext';
-import { toast } from 'react-toastify';
 
 interface ProductInfoProps {
   product: {
@@ -18,7 +17,7 @@ interface ProductInfoProps {
   };
 }
 
-const ProductInfo: React.FC<ProductInfoProps> = ({product}) => {
+const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const { addToCart, loading: cartLoading } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, loading: wishlistLoading } = useWishlist();
@@ -38,6 +37,24 @@ const ProductInfo: React.FC<ProductInfoProps> = ({product}) => {
     }
   };
 
+  const getStatusBadgeClass = (status?: string) => {
+    switch (status) {
+      case 'active': return 'badge-success';
+      case 'inactive': return 'badge-secondary';
+      case 'out_of_stock': return 'badge-danger';
+      default: return 'badge-secondary';
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    switch (status) {
+      case 'active': return 'In Stock';
+      case 'inactive': return 'Inactive';
+      case 'out_of_stock': return 'Out of Stock';
+      default: return status || 'Unknown';
+    }
+  };
+
   return (
     <div className={styles.productInfo}>
       <h2>{product.name}</h2>
@@ -46,7 +63,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({product}) => {
         <span className={styles.lastPrice}>KSh {product.lastPrice.toLocaleString()}</span>
         <span className={`badge bg-success ms-2`}>{product.discount} OFF</span>
       </div>
-      <p className="text-muted">{product.stockStatus}</p>
+      <span className={`badge ${getStatusBadgeClass(product.stockStatus)} mb-3`}>
+        {getStatusLabel(product.stockStatus)}
+      </span>
       <p>{product.description}</p>
       <Form onSubmit={handleSubmit} className={styles.addToCartForm}>
         <Form.Group controlId="quantity" className="mb-3">
@@ -60,10 +79,10 @@ const ProductInfo: React.FC<ProductInfoProps> = ({product}) => {
           />
         </Form.Group>
         <div className="d-flex gap-2">
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             type="submit"
-            disabled={cartLoading}
+            disabled={cartLoading || product.stockStatus === 'out_of_stock'}
             className="flex-grow-1"
           >
             <i className="bi bi-cart-plus me-2"></i> Add to Cart

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../../styles/ProductCard.module.css';
 import { Product } from '../../types/product';
+import { API_BASE_URL } from '../../api/main';
 
 interface ProductCardProps {
   product: Product;
@@ -21,7 +22,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       )}
       <Link to={`/product-details/${product.id}`} className="text-decoration-none text-dark">
         <img
-          src={`/assets/${product.images[0]}`}
+          src={`${API_BASE_URL}/uploads/${product.images[0]}`}
           alt={product.name}
           loading="lazy"
           className={`card-img-top ${styles.productImage}`}

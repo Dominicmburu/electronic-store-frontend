@@ -6,6 +6,7 @@ import LoadingSpinner from "../components/common/AnimatedLoadingSpinner";
 import { Order, useOrder } from "../contexts/orderContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal, Button, Badge } from "react-bootstrap";
+import { API_BASE_URL } from "../api/main";
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
@@ -365,7 +366,7 @@ const Cart: React.FC = () => {
                         >
                           <td>
                             <motion.img
-                              src={`/assets/${item.product.images[0]}`}
+                              src={`${API_BASE_URL}/uploads/${item.product.images[0]}`}
                               alt={item.product.name}
                               className="img-thumbnail"
                               style={{ maxWidth: "80px" }}

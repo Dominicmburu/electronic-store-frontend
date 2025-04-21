@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { Modal, Button, Form, Col, Row, Card, Badge, Alert } from "react-bootstrap";
@@ -93,14 +93,272 @@ const Checkout = () => {
   }, [selectedOrderId, orders, subtotal, tax]);
 
   // Load user addresses, payment methods, and fetch wallet info
-  useEffect(() => {
-    if (token && fetchPaymentMethods) {
-      fetchPaymentMethods(token);
-    }
-  }, [token, fetchPaymentMethods]);
+  // useEffect(() => {
+  //   if (token && fetchPaymentMethods) {
+  //     fetchPaymentMethods(token);
+  //   }
+  // }, [token, fetchPaymentMethods]);
 
   // Check URL parameters
-  useEffect(() => {
+  // useEffect(() => {
+  //   const params = new URLSearchParams(location.search);
+  //   const orderIdParam = params.get('orderId');
+  //   const directPayment = params.get('directPayment');
+    
+  //   if (orderIdParam) {
+  //     const parsedOrderId = parseInt(orderIdParam);
+  //     setSelectedOrderId(parsedOrderId);
+
+  //     // If directed to payment, set the flag and go to payment step
+  //     if (directPayment === 'true') {
+  //       setIsDirectPayment(true);
+  //       setCurrentStep(CheckoutStep.PAYMENT);
+        
+  //       // Save these in session storage too
+  //       sessionStorage.setItem('checkoutStep', CheckoutStep.PAYMENT.toString());
+  //       sessionStorage.setItem('selectedOrderId', orderIdParam);
+  //       sessionStorage.setItem('isDirectPayment', 'true');
+  //     }
+  //   }
+  // }, [location]);
+
+  // Restore checkout step from sessionStorage
+  // useEffect(() => {
+  //   if (!isDirectPayment) {
+  //     // Only restore from session storage if not direct payment
+  //     const savedStep = sessionStorage.getItem('checkoutStep');
+  //     const savedOrderId = sessionStorage.getItem('selectedOrderId');
+  //     const savedIsDirectPayment = sessionStorage.getItem('isDirectPayment');
+      
+  //     if (savedStep) {
+  //       setCurrentStep(parseInt(savedStep));
+  //     }
+      
+  //     if (savedOrderId) {
+  //       setSelectedOrderId(parseInt(savedOrderId));
+  //     }
+      
+  //     if (savedIsDirectPayment === 'true') {
+  //       setIsDirectPayment(true);
+  //     }
+  //   }
+  // }, [isDirectPayment]);
+
+  // Save current step to sessionStorage whenever it changes
+  // useEffect(() => {
+  //   sessionStorage.setItem('checkoutStep', currentStep.toString());
+  // }, [currentStep]);
+
+  // Save selected order ID to sessionStorage
+  // useEffect(() => {
+  //   if (selectedOrderId) {
+  //     sessionStorage.setItem('selectedOrderId', selectedOrderId.toString());
+  //   }
+  // }, [selectedOrderId]);
+
+  // Load user addresses and payment methods from profile
+  // useEffect(() => {
+  //   if (profile) {
+  //     // Format addresses from profile
+  //     const userAddresses = profile.addresses.map(addr => ({
+  //       id: addr.id,
+  //       address: addr.address,
+  //       city: addr.city,
+  //       state: addr.state,
+  //       zip: addr.zip,
+  //       country: addr.country,
+  //       phoneNumber: profile.phoneNumber || ""
+  //     }));
+
+  //     setAvailableAddresses(userAddresses);
+
+  //     // Set default selected address if available
+  //     if (userAddresses.length > 0) {
+  //       setSelectedAddress(userAddresses[0]);
+  //     }
+
+  //     // Set M-Pesa phone number from profile
+  //     const mpesaMethod = paymentMethods?.find(method => method.type === "MPESA");
+  //     if (mpesaMethod) {
+  //       setMpesaPhoneNumber(mpesaMethod.details);
+  //     } else if (profile.phoneNumber) {
+  //       setMpesaPhoneNumber(profile.phoneNumber);
+  //     }
+  //   }
+  // }, [profile, paymentMethods]);
+
+  // Replace your current profile effect with this one
+useEffect(() => {
+  // Skip if no profile is available yet
+  if (!profile) return;
+  
+  // Create a stable reference to avoid unnecessary rerenders
+  const profileAddresses = profile.addresses || [];
+  
+  // Format addresses from profile
+  const userAddresses = profileAddresses.map(addr => ({
+    id: addr.id,
+    address: addr.address,
+    city: addr.city,
+    state: addr.state,
+    zip: addr.zip,
+    country: addr.country,
+    phoneNumber: profile.phoneNumber || ""
+  }));
+
+  setAvailableAddresses(userAddresses);
+
+  // Set default selected address if available and not already set
+  if (userAddresses.length > 0 && !selectedAddress) {
+    setSelectedAddress(userAddresses[0]);
+  }
+  
+  // Only set M-Pesa phone number if not already set
+  if (!mpesaPhoneNumber && profile.phoneNumber) {
+    setMpesaPhoneNumber(profile.phoneNumber);
+  }
+  
+  // This runs when profile changes, which should be rare
+}, [profile, selectedAddress, mpesaPhoneNumber]);
+
+// Separate effect for payment methods (should run less frequently)
+useEffect(() => {
+  if (!paymentMethods || paymentMethods.length === 0) return;
+  
+  // Set payment method IDs only if not already set
+  if (walletPaymentMethodId === null || mpesaPaymentMethodId === null) {
+    const walletId = paymentMethods.find(method => method.type === 'WALLET')?.id;
+    const mpesaId = paymentMethods.find(method => method.type === 'MPESA')?.id;
+
+    if (walletId) setWalletPaymentMethodId(walletId);
+    if (mpesaId) setMpesaPaymentMethodId(mpesaId);
+  }
+  
+  // Set M-Pesa phone number if available in payment methods
+  const mpesaMethod = paymentMethods.find(method => method.type === "MPESA");
+  if (mpesaMethod?.details && !mpesaPhoneNumber) {
+    setMpesaPhoneNumber(mpesaMethod.details);
+  }
+  
+}, [paymentMethods, walletPaymentMethodId, mpesaPaymentMethodId, mpesaPhoneNumber]);
+
+  // Shipping address state
+  // const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+  //   address: "",
+  //   city: "",
+  //   county: "",
+  //   postalCode: "",
+  //   phoneNumber: "",
+  // });
+
+  // Form validation state
+  const [validated, setValidated] = useState(false);
+
+  // Fetch orders when component mounts
+  // useEffect(() => {
+  //   const fetchOrders = async () => {
+  //     try {
+  //       await getUserOrders();
+  //     } catch (error) {
+  //       // Silently handle error
+  //       console.log("No orders or error fetching orders");
+  //     }
+  //   };
+
+  //   if (token) {
+  //     fetchOrders();
+  //   }
+  // }, [getUserOrders, token]);
+
+  // Set payment method IDs
+  // useEffect(() => {
+  //   if (paymentMethods) {
+  //     const walletId = paymentMethods.find(method => method.type === 'WALLET')?.id;
+  //     const mpesaId = paymentMethods.find(method => method.type === 'MPESA')?.id;
+
+  //     setWalletPaymentMethodId(walletId || null);
+  //     setMpesaPaymentMethodId(mpesaId || null);
+  //   }
+  // }, [paymentMethods]);
+
+  // Transaction status polling
+  // useEffect(() => {
+  //   let pollingInterval: NodeJS.Timeout | undefined = undefined;
+    
+  //   if (transactionId && paymentStatus === "processing") {
+  //     setCheckingTransactionStatus(true);
+      
+  //     pollingInterval = setInterval(async () => {
+  //       try {
+  //         if (token) {
+  //           const response = await axios.get(`${API_BASE_URL}/mpesa/transaction/${transactionId}`, {
+  //             headers: { Authorization: `Bearer ${token}` }
+  //           });
+            
+  //           const { status } = response.data.data.transaction;
+            
+  //           console.log("Transaction status:", status);
+            
+  //           if (status === 'COMPLETED') {
+  //             setPaymentStatus("success");
+  //             setCheckingTransactionStatus(false);
+              
+  //             setTimeout(() => {
+  //               setOrderSuccess(true);
+  //               setCurrentStep(CheckoutStep.CONFIRMATION);
+  //               setShowPaymentModal(false);
+  //             }, 2000);
+              
+  //             if (pollingInterval) {
+  //               clearInterval(pollingInterval);
+  //             }
+              
+  //             // Refresh wallet and cart
+  //             await refreshWallet();
+  //             await refreshCart();
+              
+  //           } else if (status === 'FAILED') {
+  //             setPaymentStatus("failed");
+  //             setCheckingTransactionStatus(false);
+  //             if (pollingInterval) {
+  //               clearInterval(pollingInterval);
+  //             }
+  //           }
+  //           // If status is still "PENDING", continue polling
+  //         }
+  //       } catch (error) {
+  //         console.error("Error checking transaction status:", error);
+  //       }
+  //     }, 5000); // Check every 5 seconds
+  //   }
+    
+  //   return () => {
+  //     if (pollingInterval) {
+  //       clearInterval(pollingInterval);
+  //     }
+  //   };
+  // }, [transactionId, paymentStatus, token, refreshWallet, refreshCart]);
+
+  // Replace your current transaction polling effect with this improved version
+
+
+  // Replace multiple initialization effects with this single consolidated effect
+useEffect(() => {
+  const initializeCheckout = async () => {
+    if (token) {
+      // Load all necessary data at once
+      if (fetchPaymentMethods) {
+        await fetchPaymentMethods(token);
+      }
+      
+      try {
+        await getUserOrders();
+      } catch (error) {
+        console.log("No orders or error fetching orders");
+      }
+    }
+    
+    // Process URL parameters (moved here to run only once)
     const params = new URLSearchParams(location.search);
     const orderIdParam = params.get('orderId');
     const directPayment = params.get('directPayment');
@@ -109,180 +367,110 @@ const Checkout = () => {
       const parsedOrderId = parseInt(orderIdParam);
       setSelectedOrderId(parsedOrderId);
 
-      // If directed to payment, set the flag and go to payment step
       if (directPayment === 'true') {
         setIsDirectPayment(true);
         setCurrentStep(CheckoutStep.PAYMENT);
         
-        // Save these in session storage too
         sessionStorage.setItem('checkoutStep', CheckoutStep.PAYMENT.toString());
         sessionStorage.setItem('selectedOrderId', orderIdParam);
         sessionStorage.setItem('isDirectPayment', 'true');
-      }
-    }
-  }, [location]);
-
-  // Restore checkout step from sessionStorage
-  useEffect(() => {
-    if (!isDirectPayment) {
-      // Only restore from session storage if not direct payment
-      const savedStep = sessionStorage.getItem('checkoutStep');
-      const savedOrderId = sessionStorage.getItem('selectedOrderId');
-      const savedIsDirectPayment = sessionStorage.getItem('isDirectPayment');
-      
-      if (savedStep) {
-        setCurrentStep(parseInt(savedStep));
-      }
-      
-      if (savedOrderId) {
-        setSelectedOrderId(parseInt(savedOrderId));
-      }
-      
-      if (savedIsDirectPayment === 'true') {
-        setIsDirectPayment(true);
-      }
-    }
-  }, [isDirectPayment]);
-
-  // Save current step to sessionStorage whenever it changes
-  useEffect(() => {
-    sessionStorage.setItem('checkoutStep', currentStep.toString());
-  }, [currentStep]);
-
-  // Save selected order ID to sessionStorage
-  useEffect(() => {
-    if (selectedOrderId) {
-      sessionStorage.setItem('selectedOrderId', selectedOrderId.toString());
-    }
-  }, [selectedOrderId]);
-
-  // Load user addresses and payment methods from profile
-  useEffect(() => {
-    if (profile) {
-      // Format addresses from profile
-      const userAddresses = profile.addresses.map(addr => ({
-        id: addr.id,
-        address: addr.address,
-        city: addr.city,
-        state: addr.state,
-        zip: addr.zip,
-        country: addr.country,
-        phoneNumber: profile.phoneNumber || ""
-      }));
-
-      setAvailableAddresses(userAddresses);
-
-      // Set default selected address if available
-      if (userAddresses.length > 0) {
-        setSelectedAddress(userAddresses[0]);
-      }
-
-      // Set M-Pesa phone number from profile
-      const mpesaMethod = paymentMethods?.find(method => method.type === "MPESA");
-      if (mpesaMethod) {
-        setMpesaPhoneNumber(mpesaMethod.details);
-      } else if (profile.phoneNumber) {
-        setMpesaPhoneNumber(profile.phoneNumber);
-      }
-    }
-  }, [profile, paymentMethods]);
-
-  // Shipping address state
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
-    address: "",
-    city: "",
-    county: "",
-    postalCode: "",
-    phoneNumber: "",
-  });
-
-  // Form validation state
-  const [validated, setValidated] = useState(false);
-
-  // Fetch orders when component mounts
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        await getUserOrders();
-      } catch (error) {
-        // Silently handle error
-        console.log("No orders or error fetching orders");
-      }
-    };
-
-    if (token) {
-      fetchOrders();
-    }
-  }, [getUserOrders, token]);
-
-  // Set payment method IDs
-  useEffect(() => {
-    if (paymentMethods) {
-      const walletId = paymentMethods.find(method => method.type === 'WALLET')?.id;
-      const mpesaId = paymentMethods.find(method => method.type === 'MPESA')?.id;
-
-      setWalletPaymentMethodId(walletId || null);
-      setMpesaPaymentMethodId(mpesaId || null);
-    }
-  }, [paymentMethods]);
-
-  // Transaction status polling
-  useEffect(() => {
-    let pollingInterval: NodeJS.Timeout | undefined = undefined;
-    
-    if (transactionId && paymentStatus === "processing") {
-      setCheckingTransactionStatus(true);
-      
-      pollingInterval = setInterval(async () => {
-        try {
-          if (token) {
-            const response = await axios.get(`${API_BASE_URL}/mpesa/transaction/${transactionId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            const { status } = response.data.data.transaction;
-            
-            console.log("Transaction status:", status);
-            
-            if (status === 'COMPLETED') {
-              setPaymentStatus("success");
-              setCheckingTransactionStatus(false);
-              
-              setTimeout(() => {
-                setOrderSuccess(true);
-                setCurrentStep(CheckoutStep.CONFIRMATION);
-                setShowPaymentModal(false);
-              }, 2000);
-              
-              if (pollingInterval) {
-                clearInterval(pollingInterval);
-              }
-              
-              // Refresh wallet and cart
-              await refreshWallet();
-              await refreshCart();
-              
-            } else if (status === 'FAILED') {
-              setPaymentStatus("failed");
-              setCheckingTransactionStatus(false);
-              if (pollingInterval) {
-                clearInterval(pollingInterval);
-              }
-            }
-            // If status is still "PENDING", continue polling
-          }
-        } catch (error) {
-          console.error("Error checking transaction status:", error);
+      } else if (!isDirectPayment) {
+        // Restore from session storage
+        const savedStep = sessionStorage.getItem('checkoutStep');
+        if (savedStep) {
+          setCurrentStep(parseInt(savedStep));
         }
-      }, 5000); // Check every 5 seconds
+      }
+    }
+  };
+  
+  initializeCheckout();
+  
+  // Note: This effect only runs on initial component mount or when token changes
+}, [token, location.search]); // Minimal dependencies
+
+
+
+  useEffect(() => {
+  let timeoutId: NodeJS.Timeout | undefined = undefined;
+  let attempt = 0;
+  const MAX_ATTEMPTS = 10;
+  
+  const checkTransactionStatus = async () => {
+    if (attempt >= MAX_ATTEMPTS || !transactionId || paymentStatus !== "processing" || !token) {
+      setCheckingTransactionStatus(false);
+      return;
     }
     
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/mpesa/transaction/${transactionId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { status } = response.data.data.transaction;
+      console.log("Transaction status:", status);
+      
+      if (status === 'COMPLETED') {
+        setPaymentStatus("success");
+        setCheckingTransactionStatus(false);
+        
+        setTimeout(() => {
+          setOrderSuccess(true);
+          setCurrentStep(CheckoutStep.CONFIRMATION);
+          setShowPaymentModal(false);
+        }, 2000);
+        
+        // Call these after status is confirmed
+        debouncedRefreshWallet();
+        debouncedRefreshCart();
+      } else if (status === 'FAILED') {
+        setPaymentStatus("failed");
+        setCheckingTransactionStatus(false);
+      } else {
+        // Still processing, schedule next check with exponential backoff
+        attempt++;
+        const delay = Math.min(1000 * Math.pow(2, attempt), 30000); // Cap at 30 seconds
+        timeoutId = setTimeout(checkTransactionStatus, delay);
       }
-    };
-  }, [transactionId, paymentStatus, token, refreshWallet, refreshCart]);
+    } catch (error) {
+      console.error("Error checking transaction status:", error);
+      attempt++;
+      const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+      timeoutId = setTimeout(checkTransactionStatus, delay);
+    }
+  };
+  
+  if (transactionId && paymentStatus === "processing" && token) {
+    setCheckingTransactionStatus(true);
+    checkTransactionStatus();
+  }
+  
+  return () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  };
+}, [transactionId, paymentStatus, token]);
+
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
+// Create debounced versions of refresh functions
+const debouncedRefreshCart = useCallback(
+  debounce(() => refreshCart(), 500),
+  [refreshCart]
+);
+
+const debouncedRefreshWallet = useCallback(
+  debounce(() => refreshWallet(), 500),
+  [refreshWallet]
+);
+
 
   // Track step changes for animations
   useEffect(() => {
@@ -388,7 +576,7 @@ const Checkout = () => {
         toast.success("Order placed successfully!");
 
         // Refresh cart after successful order
-        await refreshCart();
+        await debouncedRefreshCart();
       }
     } catch (error) {
       console.error("Error placing order:", error);
@@ -399,77 +587,163 @@ const Checkout = () => {
   };
 
   // Process wallet payment
-  const processWalletPayment = async () => {
-    if (!selectedOrderId) {
-      toast.error("No order selected");
-      return;
-    }
+  // const processWalletPayment = async () => {
+  //   if (!selectedOrderId) {
+  //     toast.error("No order selected");
+  //     return;
+  //   }
 
-    try {
-      setPaymentInProgress(true);
-      setPaymentStatus("processing");
-      setShowPaymentModal(true);
+  //   try {
+  //     setPaymentInProgress(true);
+  //     setPaymentStatus("processing");
+  //     setShowPaymentModal(true);
 
-      // Process wallet payment with the order ID
-      const paymentResult = await payWithWallet(selectedOrderId);
+  //     // Process wallet payment with the order ID
+  //     const paymentResult = await payWithWallet(selectedOrderId);
 
-      setPaymentStatus("success");
-      setTimeout(() => {
-        setOrderSuccess(true);
-        setCurrentStep(CheckoutStep.CONFIRMATION);
-        setShowPaymentModal(false);
-      }, 2000);
+  //     setPaymentStatus("success");
+  //     setTimeout(() => {
+  //       setOrderSuccess(true);
+  //       setCurrentStep(CheckoutStep.CONFIRMATION);
+  //       setShowPaymentModal(false);
+  //     }, 2000);
 
-      // Refresh wallet after payment
-      await refreshWallet();
-      await refreshCart();
+  //     // Refresh wallet after payment
+  //     await debouncedRefreshWallet();
+  //     await debouncedRefreshCart();
 
-    } catch (error) {
-      console.error("Error processing wallet payment:", error);
-      setPaymentStatus("failed");
-      toast.error("Wallet payment processing failed");
-    } finally {
-      setPaymentInProgress(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error processing wallet payment:", error);
+  //     setPaymentStatus("failed");
+  //     toast.error("Wallet payment processing failed");
+  //   } finally {
+  //     setPaymentInProgress(false);
+  //   }
+  // };
+
+  // Replace your processWalletPayment function
+const processWalletPayment = async () => {
+  if (!selectedOrderId) {
+    toast.error("No order selected");
+    return;
+  }
+
+  // Prevent double processing
+  if (paymentInProgress) {
+    return;
+  }
+
+  try {
+    setPaymentInProgress(true);
+    setPaymentStatus("processing");
+    setShowPaymentModal(true);
+
+    // Process wallet payment with the order ID
+    const paymentResult = await payWithWallet(selectedOrderId);
+
+    setPaymentStatus("success");
+    
+    // Use a single setTimeout to avoid multiple state updates
+    setTimeout(() => {
+      setOrderSuccess(true);
+      setCurrentStep(CheckoutStep.CONFIRMATION);
+      setShowPaymentModal(false);
+      
+      // Only refresh data when UI updates are complete
+      debouncedRefreshWallet();
+      debouncedRefreshCart();
+    }, 2000);
+
+  } catch (error) {
+    console.error("Error processing wallet payment:", error);
+    setPaymentStatus("failed");
+    toast.error("Wallet payment processing failed");
+  } finally {
+    setPaymentInProgress(false);
+  }
+};
 
   // Process M-Pesa payment
-  const processMpesaPayment = async () => {
-    if (!selectedOrderId) {
-      toast.error("No order selected");
-      return;
-    }
+  // const processMpesaPayment = async () => {
+  //   if (!selectedOrderId) {
+  //     toast.error("No order selected");
+  //     return;
+  //   }
 
-    if (!mpesaPhoneNumber) {
-      toast.error("Please enter your M-Pesa phone number");
-      return;
-    }
+  //   if (!mpesaPhoneNumber) {
+  //     toast.error("Please enter your M-Pesa phone number");
+  //     return;
+  //   }
 
-    try {
-      setPaymentInProgress(true);
-      setPaymentStatus("processing");
-      setShowPaymentModal(true);
+  //   try {
+  //     setPaymentInProgress(true);
+  //     setPaymentStatus("processing");
+  //     setShowPaymentModal(true);
 
-      // Start M-Pesa payment with order ID and phone number
-      const transactionResult = await payOrderWithMpesa(selectedOrderId, mpesaPhoneNumber);
+  //     // Start M-Pesa payment with order ID and phone number
+  //     const transactionResult = await payOrderWithMpesa(selectedOrderId, mpesaPhoneNumber);
       
-      if (transactionResult) {
-        // Save the transaction ID for status checking
-        setTransactionId(transactionResult);
+  //     if (transactionResult) {
+  //       // Save the transaction ID for status checking
+  //       setTransactionId(transactionResult);
         
-        // No need to set success here - we'll wait for the polling to confirm
-        toast.info("M-Pesa payment initiated. Please check your phone to complete the payment.");
-      } else {
-        throw new Error("Failed to initiate payment");
-      }
+  //       // No need to set success here - we'll wait for the polling to confirm
+  //       toast.info("M-Pesa payment initiated. Please check your phone to complete the payment.");
+  //     } else {
+  //       throw new Error("Failed to initiate payment");
+  //     }
 
-    } catch (error) {
-      console.error("Error processing M-Pesa payment:", error);
-      setPaymentStatus("failed");
-      toast.error("M-Pesa payment processing failed");
-      setPaymentInProgress(false);
+  //   } catch (error) {
+  //     console.error("Error processing M-Pesa payment:", error);
+  //     setPaymentStatus("failed");
+  //     toast.error("M-Pesa payment processing failed");
+  //     setPaymentInProgress(false);
+  //   }
+  // };
+
+
+  // Replace your processMpesaPayment function
+const processMpesaPayment = async () => {
+  if (!selectedOrderId) {
+    toast.error("No order selected");
+    return;
+  }
+
+  if (!mpesaPhoneNumber) {
+    toast.error("Please enter your M-Pesa phone number");
+    return;
+  }
+
+  // Prevent double processing
+  if (paymentInProgress) {
+    return;
+  }
+
+  try {
+    setPaymentInProgress(true);
+    setPaymentStatus("processing");
+    setShowPaymentModal(true);
+
+    // Start M-Pesa payment with order ID and phone number
+    const transactionResult = await payOrderWithMpesa(selectedOrderId, mpesaPhoneNumber);
+    
+    if (transactionResult) {
+      // Save the transaction ID for status checking
+      setTransactionId(transactionResult);
+      
+      // The transaction status will be checked by the optimized polling effect
+      toast.info("M-Pesa payment initiated. Please check your phone to complete the payment.");
+    } else {
+      throw new Error("Failed to initiate payment");
     }
-  };
+
+  } catch (error) {
+    console.error("Error processing M-Pesa payment:", error);
+    setPaymentStatus("failed");
+    toast.error("M-Pesa payment processing failed");
+    setPaymentInProgress(false);
+  }
+};
 
   // Handle payment modal close
   const handleClosePaymentModal = () => {
@@ -1003,7 +1277,7 @@ return (
                       >
                         <div className="col-md-2">
                           <motion.img
-                            src={`/assets/${item.product.images[0]}`}
+                            src={`${API_BASE_URL}/uploads/${item.product.images[0]}`}
                             alt={item.product.name}
                             className="img-fluid rounded"
                             whileHover={{ scale: 1.1 }}
@@ -1259,7 +1533,8 @@ return (
                                         size="sm"
                                         variant="outline-primary"
                                         className="me-2"
-                                        onClick={() => navigate("/my-account?tab=wallet")}
+                                        // onClick={() => navigate("/my-account?tab=wallet")}
+                                        onClick={() => navigate('/my-account', { state: { tab: 'wallet' } })}
                                       >
                                         Top Up Wallet
                                       </Button>

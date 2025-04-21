@@ -1,0 +1,50 @@
+/* pages/reports/Reports.css */
+.reports-container {
+    padding: 1rem;
+}
+
+.report-filters {
+    padding: 0.5rem 0;
+}
+
+.custom-date-range {
+    background-color: #f8f9fc;
+    padding: 1rem;
+    border-radius: 0.35rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 0 auto;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.dropdown-menu {
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
+    }
+
+    .btn-group {
+        flex-wrap: nowrap;
+    }
+}

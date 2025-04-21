@@ -11,6 +11,7 @@ import { useState } from "react";
 
 import styles from "../styles/NavBar.module.css";
 import { useCart } from "../contexts/cartContext";
+import { API_BASE_URL } from "../api/main";
 
 const NavBar = () => {
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
@@ -45,10 +46,10 @@ const NavBar = () => {
       <div className="container-fluid">
         <a className="navbar-brand" href="#">
           <img
-            src="/assets/logo.png"
+            src={`${API_BASE_URL}/uploads/logo.png`}
             alt="Logo"
             className="d-inline-block align-middle"
-            style={{ height: "40px" }}
+            style={{ height: "50px" }}
           />
         </a>
 

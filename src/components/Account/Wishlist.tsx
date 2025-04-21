@@ -16,7 +16,7 @@ const Wishlist = () => {
           setWishlistItems(response.wishlist);
         }
       } catch (error) {
-        toast.error("Failed to fetch wishlist items.");
+        // toast.error("Failed to fetch wishlist items.");
       }
     };
     fetchItems();

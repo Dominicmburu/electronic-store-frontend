@@ -1,19 +1,45 @@
-/* src/styles/Account/AccountPage.module.css */
 
-.accountPage {
-    /* General styles for the account page */
-  }
-  
-  .account-container {
-    display: flex;
+#account_tabs {
+  display: flex;
+  /* background-color: #570606; */
+  flex-direction: row;
+}
+
+.nav_tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+#account-tabs .nav-item {
+  flex: 1 1 auto; /* Allow items to stretch */
+  text-align: center;
+}
+
+#account-tabs .nav-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 16px;
+}
+
+@media (max-width: 767px) {
+  #account-tabs .nav-tabs {
     flex-direction: column;
-    gap: 20px;
   }
-  
-  /* Responsive Adjustments */
-  @media (min-width: 768px) {
-    .account-container {
-      flex-direction: row;
-    }
+
+  #account-tabs .nav-item {
+    width: 100%;
   }
-  
+}
+
+#account-tabs .nav-item .active {
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+}
+
+#account-tabs .tab-content {
+  margin-top: 20px;
+}

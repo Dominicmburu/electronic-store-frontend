@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { API_BASE_URL } from '../api/main';
+import { UserContext } from './UserContext';
+import axiosInstance from '../api/axiosInstance';
+import handleError from '../api/handleError';
 
 interface OrderItem {
   id: number;
@@ -67,29 +69,19 @@ interface OrderProviderProps {
 
 export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const { token } = useContext(UserContext) || {};
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [error] = useState<string | null>(null);
 
-  // Helper functions
+  // const navigate = useNavigate();
+
   const getToken = useCallback(() => {
-    const token = Cookies.get('token');
     if (!token) {
-      toast.error('Please login to continue');
-      throw new Error('Authentication required');
+      // handleError('Authentication required');
     }
     return token;
-  }, []);
-
-  const handleError = useCallback((error: any, defaultMessage: string) => {
-    const message = error.response?.data?.message || defaultMessage;
-    toast.error(message);
-    setError(message);
-    console.error(defaultMessage, error);
-  }, []);
-
-
+  }, [token]);
 
   // Data fetching
   const getUserOrders = useCallback(async () => {
@@ -100,12 +92,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(response.data.orders);
+      
     } catch (err: any) {
-      handleError(err, 'Failed to fetch orders');
+      // handleError(err, 'Failed to fetch orders');
     } finally {
       setLoading(false);
     }
-  }, [getToken, handleError]);
+  }, [getToken]);
 
   // Initial load
   useEffect(() => {
@@ -120,7 +113,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       const token = getToken();
-      const response = await axios.post(`${API_BASE_URL}/orders`, {
+      const response = await axiosInstance.post(`${API_BASE_URL}/orders`, {
         shippingAddressId,
         paymentMethodId,
       }, {
@@ -138,13 +131,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [getToken, getUserOrders, handleError]);
+  }, [getToken, getUserOrders]);
 
   const getOrderDetails = useCallback(async (orderNumber: string): Promise<Order | null> => {
     setLoading(true);
     try {
       const token = getToken();
-      const response = await axios.get(`${API_BASE_URL}/orders/${orderNumber}`, {
+      const response = await axiosInstance.get(`${API_BASE_URL}/orders/${orderNumber}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCurrentOrder(response.data.order);
@@ -155,13 +148,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [getToken, handleError]);
+  }, [getToken]);
 
   const trackOrder = useCallback(async (orderNumber: string): Promise<OrderStatus[] | null> => {
     setLoading(true);
     try {
       const token = getToken();
-      const response = await axios.get(`${API_BASE_URL}/orders/${orderNumber}/track`, {
+      const response = await axiosInstance.get(`${API_BASE_URL}/orders/${orderNumber}/track`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.statusHistory;
@@ -171,7 +164,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [getToken, handleError]);
+  }, [getToken]);
 
   const cancelOrder = useCallback(async (orderNumber: string): Promise<boolean> => {
     setLoading(true);
@@ -180,7 +173,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       setOrders(prev => prev.filter(order => order.orderNumber !== orderNumber));
 
       const token = getToken();
-      await axios.delete(`${API_BASE_URL}/orders/${orderNumber}`, {
+      await axiosInstance.delete(`${API_BASE_URL}/orders/${orderNumber}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -193,7 +186,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [getToken, getUserOrders, handleError]);
+  }, [getToken, getUserOrders]);
 
   const requestRefund = async (orderId: number, reason: string): Promise<boolean> => {
     setLoading(true);
@@ -205,7 +198,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         return false;
       }
 
-      await axios.post(
+      await axiosInstance.post(
         `${API_BASE_URL}/mpesa/refund/request`,
         {
           orderId,
@@ -221,9 +214,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       toast.success('Refund request submitted successfully');
       return true;
     } catch (err: any) {
-      setError('Failed to request refund');
-      toast.error(err.response?.data?.message || 'Failed to request refund');
-      console.error('Error requesting refund:', err);
+      handleError(err, 'Failed to request refund');
       return false;
     } finally {
       setLoading(false);
@@ -240,7 +231,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
         return;
       }
 
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${API_BASE_URL}/mpesa/stk-push`,
         {
           orderId,
@@ -256,9 +247,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
       toast.success('Payment initiated. Check your phone to complete the payment.');
       return response.data.data.transactionId; // Return transaction ID for status checking
     } catch (err: any) {
-      setError('Failed to initiate payment');
-      toast.error(err.response?.data?.message || 'Failed to initiate payment');
-      console.error('Error initiating payment:', err);
+      handleError(err, 'Failed to initiate payment');
     } finally {
       setLoading(false);
     }

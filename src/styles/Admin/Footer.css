@@ -1,0 +1,31 @@
+/* components/Admin/Footer/Footer.css */
+.admin-footer {
+    height: var(--footer-height);
+    background-color: white;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-dark);
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .footer-copyright {
+    font-size: 0.875rem;
+    color: #858796;
+  }
+  
+  .footer-links {
+    display: flex;
+  }
+  
+  .footer-link {
+    color: #858796;
+    font-size: 0.875rem;
+    margin-left: 1.5rem;
+    text-decoration: none;
+  }
+  
+  .footer-link:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+  }

@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
-import { API_BASE_URL } from '../api/main';
+import { API_BASE_URL, FRONTEND_MODE } from '../api/main';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from './UserContext';
+import axiosInstance from '../api/axiosInstance';
+import handleError from '../api/handleError';
 
 interface CartItem {
   id: number;
@@ -48,24 +51,21 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<Cart | null>(null);
+  const { token } = useContext(UserContext) || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const isAuthenticated = useCallback(() => {
+    return !!token;
+  }, [token]);  
 
   // Helper functions
   const getToken = useCallback(() => {
-    const token = Cookies.get('token');
     if (!token) throw new Error('Authentication required');
     return token;
-  }, []);
+  }, [token]);
 
-  const handleError = useCallback((error: unknown, defaultMessage: string) => {
-    const message = (error as any)?.response?.data?.message || defaultMessage;
-    toast.error(message);
-    setError(message);
-    console.error(defaultMessage, error);
-  }, []);
-
-  // Cart operations
   const refreshCart = useCallback(async () => {
     setLoading(true);
     try {
@@ -75,14 +75,21 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         return;
       }
 
-      const response = await axios.get<{ cart: Cart }>(`${API_BASE_URL}/cart`, {
+      const requestUrl = `${API_BASE_URL}/cart`;
+
+      if (FRONTEND_MODE === 'development') {
+        console.log('Request URL:', requestUrl);
+      }
+
+      const response = await axiosInstance.get<{ cart: Cart }>(requestUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setCart(response.data.cart);
       setError(null);
     } catch (error) {
       if ((error as any)?.response?.status === 401) setCart(null);
-      else handleError(error, 'Failed to fetch cart');
+      else handleError(error, 'Failed to fetch cart, please try again later');
     } finally {
       setLoading(false);
     }
@@ -90,9 +97,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   useEffect(() => {
     refreshCart();
-  }, [refreshCart]);
+  }, [token, refreshCart]);
 
   const addToCart = useCallback(async (productId: number, quantity: number) => {
+    if (!isAuthenticated()) {
+      toast.info('Please login to add items to your cart');
+      navigate('/my-account', { state: { activeTab: 'login' } });
+      return;
+    }
+
     try {
       setLoading(true);
       const token = getToken();
@@ -127,7 +140,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         };
       });
 
-      const response = await axios.post<{ cart: Cart }>(
+      const response = await axiosInstance.post<{ cart: Cart }>(
         `${API_BASE_URL}/cart`,
         { productId, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -142,7 +155,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [getToken, handleError, refreshCart]);
+  }, [getToken, handleError, refreshCart, navigate, isAuthenticated]);
 
   const updateCartItem = useCallback(async (cartItemId: number, quantity: number) => {
     try {
@@ -167,7 +180,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         };
       });
 
-      await axios.put(
+      await axiosInstance.put(
         `${API_BASE_URL}/cart/item`,
         { cartItemId, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -198,7 +211,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         };
       });
 
-      await axios.delete(`${API_BASE_URL}/cart/item`, {
+      await axiosInstance.delete(`${API_BASE_URL}/cart/item`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { cartItemId }
       });

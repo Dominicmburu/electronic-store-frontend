@@ -1,13 +1,15 @@
+// src/pages/StoreLocator.tsx
+
 import React, { useState, useRef, useMemo } from 'react';
 import Layout from '../components/Layout';
 import StoreList from '../components/shop_locations/StoreList';
 import MapComponent from '../components/shop_locations/MapComponent';
 import { stores, Store } from '../types/stores';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 
 const StoreLocator: React.FC = () => {
   const [filteredStores, setFilteredStores] = useState<Store[]>(stores);
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const mapRef = useRef<any>(null);
 
   const handleSearch = (query: string) => {
     const lowerCaseQuery = query.toLowerCase();
@@ -32,8 +34,7 @@ const StoreLocator: React.FC = () => {
   const focusOnStore = (storeId: number) => {
     const store = stores.find(s => s.id === storeId);
     if (store && mapRef.current) {
-      mapRef.current.setZoom(14);
-      mapRef.current.panTo({ lat: store.lat, lng: store.lng });
+      mapRef.current.setView([store.lat, store.lng], 14);
     }
   };
 

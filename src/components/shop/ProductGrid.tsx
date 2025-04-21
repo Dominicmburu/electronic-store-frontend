@@ -51,7 +51,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => (
     {products.map((product) => (
       <motion.div
         key={product.id}
-        className="col-12 col-md-6 col-lg-4"
+        className="col-6 col-md-6 col-lg-4"
         variants={productVariants}
         whileHover="hover"
         initial="hidden"

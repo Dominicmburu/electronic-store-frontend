@@ -59,7 +59,7 @@ const ProductDetails: React.FC = () => {
         const mappedProduct: Product = {
           id: apiProduct.id,
           name: apiProduct.name,
-          images: apiProduct.images.map((img: string) => `/assets/${img}`), // Add path prefix
+          images: apiProduct.images.map((img: string) => `${API_BASE_URL}/uploads/${img}`), // Add path prefix
           currentPrice: apiProduct.currentPrice,
           lastPrice: apiProduct.lastPrice,
           discount:
@@ -70,7 +70,7 @@ const ProductDetails: React.FC = () => {
                     100
                 )}%`
               : "0%",
-          stock: "In Stock",
+          stock: getStatus(apiProduct.stockQuantity),
           description: apiProduct.description,
           specifications: apiProduct.specifications || {},
           reviews: apiProduct.reviews || [],
@@ -90,6 +90,10 @@ const ProductDetails: React.FC = () => {
 
     if (id) fetchProductDetails();
   }, [id]);
+
+  const getStatus = (stockQuantity?: number): 'active' | 'out_of_stock' => {
+    return stockQuantity && stockQuantity > 0 ? 'active' : 'out_of_stock';
+  };
 
   return (
     <Layout>

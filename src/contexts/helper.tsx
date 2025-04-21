@@ -1,11 +1,17 @@
-import axios from 'axios';
 import Cookies from 'js-cookie';
 import { API_BASE_URL } from '../api/main';
+import axiosInstance from '../api/axiosInstance';
+import handleError from '../api/handleError';
 
 
 export const loginUser = async (email: string, password: string) => {
-  const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
-  return response.data;
+  try {
+    const response = await axiosInstance.post(`${API_BASE_URL}/auth/login`, { email, password });
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to login');
+    throw new Error('Failed to login');
+  }
 };
 
 export const fetchUserProfile = async (token: string) => {
@@ -14,8 +20,7 @@ export const fetchUserProfile = async (token: string) => {
       throw new Error('No token found.');
     }
 
-
-    const response = await axios.get(`${API_BASE_URL}/users/profile`, {
+    const response = await axiosInstance.get(`${API_BASE_URL}/users/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -24,7 +29,7 @@ export const fetchUserProfile = async (token: string) => {
 
     return response.data.user;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    handleError(error, 'Failed to fetch user profile');
     return null;
   }
 };
@@ -36,18 +41,23 @@ export const updateUserProfile = async (
   password?: string,
   currentPassword?: string
 ) => {
-  const token = Cookies.get('token');
-  if (!token) throw new Error('No token found.');
-  
-  const response = await axios.put(
-    `${API_BASE_URL}/users/profile`,
-    { name, email, phoneNumber, password, currentPassword },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  try {
+    const token = Cookies.get('token');
+    if (!token) throw new Error('No token found.');
 
-  return response.data.user;
+    const response = await axiosInstance.put(
+      `${API_BASE_URL}/users/profile`,
+      { name, email, phoneNumber, password, currentPassword },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data.user;
+  } catch (error) {
+    handleError(error, 'Failed to update user profile');
+    throw new Error('Failed to update user profile');
+  }
 };
