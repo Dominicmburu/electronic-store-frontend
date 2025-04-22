@@ -1,0 +1,6 @@
+/* components/Admin/analytics/RevenueChart.css */
+.revenue-chart-container {
+    position: relative;
+    height: 320px;
+    margin: 0 auto;
+  }

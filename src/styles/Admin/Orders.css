@@ -1,0 +1,45 @@
+/* pages/orders/Orders.css */
+.orders-container {
+    padding: 1rem;
+}
+
+.order-filters {
+    padding: 0.5rem 0;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #d1d3e2;
+    margin-bottom: 1rem;
+}
+
+.badge {
+    font-size: 85%;
+    font-weight: 600;
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.table th {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        border-radius: 0.25rem !important;
+    }
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(78, 115, 223, 0.05);
+}

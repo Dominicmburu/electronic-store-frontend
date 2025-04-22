@@ -1,0 +1,48 @@
+/* pages/categories/Categories.css */
+.categories-container {
+    padding: 1rem;
+  }
+  
+  .category-icon-circle {
+    width: 36px;
+    height: 36px;
+    background-color: #4e73df;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .category-icon-circle .material-icons {
+    font-size: 18px;
+  }
+  
+  .category-description {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .empty-icon {
+    font-size: 4rem;
+    color: #d1d3e2;
+    margin-bottom: 1rem;
+  }
+  
+  /* Modal styles */
+  .modal.show {
+    display: block;
+    padding-right: 17px;
+  }
+  
+  .modal-backdrop.show {
+    opacity: 0.5;
+  }
+  
+  @media (max-width: 768px) {
+    .category-description {
+      max-width: 150px;
+    }
+  }

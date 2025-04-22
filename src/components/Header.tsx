@@ -2,7 +2,7 @@ import { FaPhoneAlt, FaEnvelope, FaFacebook, FaTwitter, FaInstagram } from 'reac
 
 const Header = () => {
   return (
-    <header className="py-1 shadow-sm" style={{ backgroundColor: '#2196F3' }}>
+    <header className="py-1 shadow-sm d-none d-sm-block" style={{ backgroundColor: '#2196F3' }}>
       <div className="container d-flex flex-column flex-sm-row justify-content-between align-items-center">
         
         <div className="d-flex flex-column flex-sm-row mb-3 mb-sm-0 align-items-center">

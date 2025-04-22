@@ -48,7 +48,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, cur
 
         const formattedProducts = combined.map(p => ({
           ...p,
-          image: `/assets/${p.images}`,
+          image: `${API_BASE_URL}/uploads/${p.images}`,
           discount: p.lastPrice && p.currentPrice 
             ? `${Math.round(((p.lastPrice - p.currentPrice) / p.lastPrice) * 100)}%`
             : '0%'
@@ -73,14 +73,15 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, cur
       <h4>Related Products</h4>
       <div className="row">
         {relatedProducts.map((product) => (
-          <div key={product.id} className="col-md-4 mb-4">
-            <div className={`product-card ${styles.productCard}`}>
+          <div key={product.id} className="col-12 col-md-6 mb-4">
+            <div className={`product-card col-md-6 ${styles.productCard}`}>
               <span className={`badge bg-success ${styles.badgeDiscount}`}>
                 {product.discount}
               </span>
               <Link to={`/product-details/${product.id}`} className="text-decoration-none text-dark">
                 <img src={product.image} alt={product.name} className="mb-3" />
                 <h5>{product.name}</h5>
+                <h5>{product.image}</h5>
                 <p className="price">
                   {product.lastPrice > 0 && (
                     <span className="old-price me-2">

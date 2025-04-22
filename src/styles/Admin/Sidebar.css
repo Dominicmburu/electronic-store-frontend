@@ -1,0 +1,193 @@
+/* components/Admin/Sidebar/Sidebar.css */
+.admin-sidebar {
+    height: 100vh;
+    width: var(--sidebar-width);
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow-x: hidden;
+}
+
+.admin-sidebar.closed {
+    width: var(--sidebar-width-collapsed);
+}
+
+.sidebar-header {
+    height: var(--header-height);
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.logo {
+    width: 35px;
+    height: 35px;
+}
+
+.logo-text {
+    margin-left: 10px;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-profile {
+    padding: 1.5rem 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #4e73df;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.user-info {
+    margin-left: 15px;
+    white-space: nowrap;
+}
+
+.user-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.user-role {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.sidebar-divider {
+    padding: 0 1rem;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-divider hr {
+    width: 100%;
+    margin: 0;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    width: 100%;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    border-left: 4px solid white;
+}
+
+.nav-icon {
+    margin-right: 10px;
+    font-size: 1.25rem;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.logout-btn i {
+    margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+    .admin-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .admin-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+}

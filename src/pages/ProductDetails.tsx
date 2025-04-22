@@ -59,7 +59,7 @@ const ProductDetails: React.FC = () => {
         const mappedProduct: Product = {
           id: apiProduct.id,
           name: apiProduct.name,
-          images: apiProduct.images.map((img: string) => `/assets/${img}`), // Add path prefix
+          images: apiProduct.images.map((img: string) => `${API_BASE_URL}/uploads/${img}`), // Add path prefix
           currentPrice: apiProduct.currentPrice,
           lastPrice: apiProduct.lastPrice,
           discount:
@@ -70,7 +70,7 @@ const ProductDetails: React.FC = () => {
                     100
                 )}%`
               : "0%",
-          stock: "In Stock",
+          stock: getStatus(apiProduct.stockQuantity),
           description: apiProduct.description,
           specifications: apiProduct.specifications || {},
           reviews: apiProduct.reviews || [],
@@ -91,8 +91,8 @@ const ProductDetails: React.FC = () => {
     if (id) fetchProductDetails();
   }, [id]);
 
-  const handleAddToCart = (quantity: number) => {
-    alert(`Added ${quantity} item(s) to cart.`);
+  const getStatus = (stockQuantity?: number): 'active' | 'out_of_stock' => {
+    return stockQuantity && stockQuantity > 0 ? 'active' : 'out_of_stock';
   };
 
   return (
@@ -115,14 +115,17 @@ const ProductDetails: React.FC = () => {
             </div>
 
             <div className="col-md-6">
+              {/* Pass the product object in the expected format */}
               <ProductInfo
-                name={product.name || ""}
-                currentPrice={product.currentPrice || 0}
-                lastPrice={product.lastPrice || 0}
-                discount={product.discount || "0"}
-                stockStatus={product.stock || ""}
-                description={product.description || ""}
-                onAddToCart={handleAddToCart}
+                product={{
+                  id: product.id,
+                  name: product.name,
+                  currentPrice: product.currentPrice,
+                  lastPrice: product.lastPrice,
+                  discount: product.discount,
+                  stockStatus: product.stock,
+                  description: product.description
+                }}
               />
             </div>
           </div>

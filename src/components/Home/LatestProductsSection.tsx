@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import styles from "../../styles/LatestProductsSection.module.css";
 import { Link } from "react-router-dom";
 import productAPI from "../../api/product";
+import { API_BASE_URL } from "../../api/main";
 
 interface LatestProductCardProps {
   image: string;
@@ -84,7 +85,7 @@ const LatestProductsSection: React.FC = () => {
         const { latestPrinters } = data;
 
         const formattedProducts = latestPrinters.map((product: any) => ({
-          image: `/assets/${product.images[0]}`,
+          image: `${API_BASE_URL}/uploads/${product.images[0]}`,
           alt: product.name,
           title: product.name,
           type: product.description,
@@ -114,7 +115,7 @@ const LatestProductsSection: React.FC = () => {
     <section className="latest-products-section py-5">
       <div className="container">
         <h2 className="text-center mb-4">Latest Printers</h2>
-        <div className="row g-4">
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
           {isLoading ? (
             // Skeleton loader for the loading state
             Array.from({ length: 4 }).map((_, index) => (

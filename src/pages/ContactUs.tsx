@@ -1,8 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import styles from '../styles/Contact/ContactUs.module.css';
+import { API_BASE_URL } from '../api/main';
 
 const ContactUs: React.FC = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      setSubmitStatus({ success: true, message: 'Message sent successfully!' });
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (error) {
+      setSubmitStatus({ success: false, message: error instanceof Error ? error.message : 'Failed to send message' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container my-5">
@@ -66,7 +115,12 @@ const ContactUs: React.FC = () => {
                 <h5>
                   <i className="bi bi-envelope-plus-fill"></i> Send Us a Message
                 </h5>
-                <form id="contact-form">
+                {submitStatus && (
+                  <div className={`alert alert-${submitStatus.success ? 'success' : 'danger'}`} role="alert">
+                    {submitStatus.message}
+                  </div>
+                )}
+                <form id="contact-form" onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label htmlFor="contact-name" className="form-label">
                       Full Name
@@ -75,8 +129,11 @@ const ContactUs: React.FC = () => {
                       type="text"
                       className="form-control"
                       id="contact-name"
+                      name="name"
                       placeholder="Enter your full name"
                       required
+                      value={formData.name}
+                      onChange={handleChange}
                     />
                   </div>
                   <div className="mb-3">
@@ -87,8 +144,11 @@ const ContactUs: React.FC = () => {
                       type="email"
                       className="form-control"
                       id="contact-email"
+                      name="email"
                       placeholder="Enter your email"
                       required
+                      value={formData.email}
+                      onChange={handleChange}
                     />
                   </div>
                   <div className="mb-3">
@@ -99,8 +159,11 @@ const ContactUs: React.FC = () => {
                       type="text"
                       className="form-control"
                       id="contact-subject"
+                      name="subject"
                       placeholder="Enter the subject"
                       required
+                      value={formData.subject}
+                      onChange={handleChange}
                     />
                   </div>
                   <div className="mb-3">
@@ -110,13 +173,29 @@ const ContactUs: React.FC = () => {
                     <textarea
                       className="form-control"
                       id="contact-message"
+                      name="message"
                       rows={5}
                       placeholder="Enter your message"
                       required
+                      value={formData.message}
+                      onChange={handleChange}
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="bi bi-send-fill"></i> Send Message
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-send-fill"></i> Send Message
+                      </>
+                    )}
                   </button>
                 </form>
               </div>
