@@ -7,10 +7,8 @@ import Layout from "../components/Layout";
 import { useCart } from "../contexts/cartContext";
 import { useOrder } from "../contexts/orderContext";
 import { useWallet } from "../contexts/walletContext";
-import { Order } from "../contexts/orderContext";
 import LoadingSpinner from "../components/common/AnimatedLoadingSpinner";
 import { UserContext } from '../contexts/UserContext';
-import { Address, FetchUserAddressesResponse } from "../types/account";
 import axios from "axios";
 import { API_BASE_URL } from "../api/main";
 
@@ -70,19 +68,19 @@ const Checkout = () => {
 
   // Animation refs
   const pageRef = useRef(null);
-  
+
   // Calculate order summary
   const subtotal = cart?.totalAmount || 0;
   const taxRate = 0.18; // 18% tax
   const tax = subtotal * taxRate;
-  
+
   // Effect to set total from cart or selected order
   useEffect(() => {
     if (selectedOrderId && orders) {
       const selectedOrder = orders.find(order => order.id === selectedOrderId);
       if (selectedOrder) {
         const orderTotal = selectedOrder.orderItems.reduce(
-          (sum, item) => sum + (item.price * item.quantity), 
+          (sum, item) => sum + (item.price * item.quantity),
           0
         );
         setTotal(orderTotal * (1 + taxRate)); // Calculate with tax
@@ -104,7 +102,7 @@ const Checkout = () => {
   //   const params = new URLSearchParams(location.search);
   //   const orderIdParam = params.get('orderId');
   //   const directPayment = params.get('directPayment');
-    
+
   //   if (orderIdParam) {
   //     const parsedOrderId = parseInt(orderIdParam);
   //     setSelectedOrderId(parsedOrderId);
@@ -113,7 +111,7 @@ const Checkout = () => {
   //     if (directPayment === 'true') {
   //       setIsDirectPayment(true);
   //       setCurrentStep(CheckoutStep.PAYMENT);
-        
+
   //       // Save these in session storage too
   //       sessionStorage.setItem('checkoutStep', CheckoutStep.PAYMENT.toString());
   //       sessionStorage.setItem('selectedOrderId', orderIdParam);
@@ -129,15 +127,15 @@ const Checkout = () => {
   //     const savedStep = sessionStorage.getItem('checkoutStep');
   //     const savedOrderId = sessionStorage.getItem('selectedOrderId');
   //     const savedIsDirectPayment = sessionStorage.getItem('isDirectPayment');
-      
+
   //     if (savedStep) {
   //       setCurrentStep(parseInt(savedStep));
   //     }
-      
+
   //     if (savedOrderId) {
   //       setSelectedOrderId(parseInt(savedOrderId));
   //     }
-      
+
   //     if (savedIsDirectPayment === 'true') {
   //       setIsDirectPayment(true);
   //     }
@@ -188,59 +186,59 @@ const Checkout = () => {
   // }, [profile, paymentMethods]);
 
   // Replace your current profile effect with this one
-useEffect(() => {
-  // Skip if no profile is available yet
-  if (!profile) return;
-  
-  // Create a stable reference to avoid unnecessary rerenders
-  const profileAddresses = profile.addresses || [];
-  
-  // Format addresses from profile
-  const userAddresses = profileAddresses.map(addr => ({
-    id: addr.id,
-    address: addr.address,
-    city: addr.city,
-    state: addr.state,
-    zip: addr.zip,
-    country: addr.country,
-    phoneNumber: profile.phoneNumber || ""
-  }));
+  useEffect(() => {
+    // Skip if no profile is available yet
+    if (!profile) return;
 
-  setAvailableAddresses(userAddresses);
+    // Create a stable reference to avoid unnecessary rerenders
+    const profileAddresses = profile.addresses || [];
 
-  // Set default selected address if available and not already set
-  if (userAddresses.length > 0 && !selectedAddress) {
-    setSelectedAddress(userAddresses[0]);
-  }
-  
-  // Only set M-Pesa phone number if not already set
-  if (!mpesaPhoneNumber && profile.phoneNumber) {
-    setMpesaPhoneNumber(profile.phoneNumber);
-  }
-  
-  // This runs when profile changes, which should be rare
-}, [profile, selectedAddress, mpesaPhoneNumber]);
+    // Format addresses from profile
+    const userAddresses = profileAddresses.map(addr => ({
+      id: addr.id,
+      address: addr.address,
+      city: addr.city,
+      state: addr.state,
+      zip: addr.zip,
+      country: addr.country,
+      phoneNumber: profile.phoneNumber || ""
+    }));
 
-// Separate effect for payment methods (should run less frequently)
-useEffect(() => {
-  if (!paymentMethods || paymentMethods.length === 0) return;
-  
-  // Set payment method IDs only if not already set
-  if (walletPaymentMethodId === null || mpesaPaymentMethodId === null) {
-    const walletId = paymentMethods.find(method => method.type === 'WALLET')?.id;
-    const mpesaId = paymentMethods.find(method => method.type === 'MPESA')?.id;
+    setAvailableAddresses(userAddresses);
 
-    if (walletId) setWalletPaymentMethodId(walletId);
-    if (mpesaId) setMpesaPaymentMethodId(mpesaId);
-  }
-  
-  // Set M-Pesa phone number if available in payment methods
-  const mpesaMethod = paymentMethods.find(method => method.type === "MPESA");
-  if (mpesaMethod?.details && !mpesaPhoneNumber) {
-    setMpesaPhoneNumber(mpesaMethod.details);
-  }
-  
-}, [paymentMethods, walletPaymentMethodId, mpesaPaymentMethodId, mpesaPhoneNumber]);
+    // Set default selected address if available and not already set
+    if (userAddresses.length > 0 && !selectedAddress) {
+      setSelectedAddress(userAddresses[0]);
+    }
+
+    // Only set M-Pesa phone number if not already set
+    if (!mpesaPhoneNumber && profile.phoneNumber) {
+      setMpesaPhoneNumber(profile.phoneNumber);
+    }
+
+    // This runs when profile changes, which should be rare
+  }, [profile, selectedAddress, mpesaPhoneNumber]);
+
+  // Separate effect for payment methods (should run less frequently)
+  useEffect(() => {
+    if (!paymentMethods || paymentMethods.length === 0) return;
+
+    // Set payment method IDs only if not already set
+    if (walletPaymentMethodId === null || mpesaPaymentMethodId === null) {
+      const walletId = paymentMethods.find(method => method.type === 'WALLET')?.id;
+      const mpesaId = paymentMethods.find(method => method.type === 'MPESA')?.id;
+
+      if (walletId) setWalletPaymentMethodId(walletId);
+      if (mpesaId) setMpesaPaymentMethodId(mpesaId);
+    }
+
+    // Set M-Pesa phone number if available in payment methods
+    const mpesaMethod = paymentMethods.find(method => method.type === "MPESA");
+    if (mpesaMethod?.details && !mpesaPhoneNumber) {
+      setMpesaPhoneNumber(mpesaMethod.details);
+    }
+
+  }, [paymentMethods, walletPaymentMethodId, mpesaPaymentMethodId, mpesaPhoneNumber]);
 
   // Shipping address state
   // const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
@@ -284,39 +282,39 @@ useEffect(() => {
   // Transaction status polling
   // useEffect(() => {
   //   let pollingInterval: NodeJS.Timeout | undefined = undefined;
-    
+
   //   if (transactionId && paymentStatus === "processing") {
   //     setCheckingTransactionStatus(true);
-      
+
   //     pollingInterval = setInterval(async () => {
   //       try {
   //         if (token) {
   //           const response = await axios.get(`${API_BASE_URL}/mpesa/transaction/${transactionId}`, {
   //             headers: { Authorization: `Bearer ${token}` }
   //           });
-            
+
   //           const { status } = response.data.data.transaction;
-            
+
   //           console.log("Transaction status:", status);
-            
+
   //           if (status === 'COMPLETED') {
   //             setPaymentStatus("success");
   //             setCheckingTransactionStatus(false);
-              
+
   //             setTimeout(() => {
   //               setOrderSuccess(true);
   //               setCurrentStep(CheckoutStep.CONFIRMATION);
   //               setShowPaymentModal(false);
   //             }, 2000);
-              
+
   //             if (pollingInterval) {
   //               clearInterval(pollingInterval);
   //             }
-              
+
   //             // Refresh wallet and cart
   //             await refreshWallet();
   //             await refreshCart();
-              
+
   //           } else if (status === 'FAILED') {
   //             setPaymentStatus("failed");
   //             setCheckingTransactionStatus(false);
@@ -331,7 +329,7 @@ useEffect(() => {
   //       }
   //     }, 5000); // Check every 5 seconds
   //   }
-    
+
   //   return () => {
   //     if (pollingInterval) {
   //       clearInterval(pollingInterval);
@@ -343,134 +341,185 @@ useEffect(() => {
 
 
   // Replace multiple initialization effects with this single consolidated effect
-useEffect(() => {
-  const initializeCheckout = async () => {
-    if (token) {
-      // Load all necessary data at once
-      if (fetchPaymentMethods) {
-        await fetchPaymentMethods(token);
-      }
-      
-      try {
-        await getUserOrders();
-      } catch (error) {
-        console.log("No orders or error fetching orders");
-      }
-    }
-    
-    // Process URL parameters (moved here to run only once)
-    const params = new URLSearchParams(location.search);
-    const orderIdParam = params.get('orderId');
-    const directPayment = params.get('directPayment');
-    
-    if (orderIdParam) {
-      const parsedOrderId = parseInt(orderIdParam);
-      setSelectedOrderId(parsedOrderId);
+  useEffect(() => {
+    const initializeCheckout = async () => {
+      if (token) {
+        // Load all necessary data at once
+        if (fetchPaymentMethods) {
+          await fetchPaymentMethods(token);
+        }
 
-      if (directPayment === 'true') {
-        setIsDirectPayment(true);
-        setCurrentStep(CheckoutStep.PAYMENT);
-        
-        sessionStorage.setItem('checkoutStep', CheckoutStep.PAYMENT.toString());
-        sessionStorage.setItem('selectedOrderId', orderIdParam);
-        sessionStorage.setItem('isDirectPayment', 'true');
-      } else if (!isDirectPayment) {
-        // Restore from session storage
-        const savedStep = sessionStorage.getItem('checkoutStep');
-        if (savedStep) {
-          setCurrentStep(parseInt(savedStep));
+        try {
+          await getUserOrders();
+        } catch (error) {
+          console.log("No orders or error fetching orders");
         }
       }
-    }
+
+      // Process URL parameters (moved here to run only once)
+      const params = new URLSearchParams(location.search);
+      const orderIdParam = params.get('orderId');
+      const directPayment = params.get('directPayment');
+
+      if (orderIdParam) {
+        const parsedOrderId = parseInt(orderIdParam);
+        setSelectedOrderId(parsedOrderId);
+
+        if (directPayment === 'true') {
+          setIsDirectPayment(true);
+          setCurrentStep(CheckoutStep.PAYMENT);
+
+          sessionStorage.setItem('checkoutStep', CheckoutStep.PAYMENT.toString());
+          sessionStorage.setItem('selectedOrderId', orderIdParam);
+          sessionStorage.setItem('isDirectPayment', 'true');
+        } else if (!isDirectPayment) {
+          // Restore from session storage
+          const savedStep = sessionStorage.getItem('checkoutStep');
+          if (savedStep) {
+            setCurrentStep(parseInt(savedStep));
+          }
+        }
+      }
+    };
+
+    initializeCheckout();
+
+    // Note: This effect only runs on initial component mount or when token changes
+  }, [token, location.search]); // Minimal dependencies
+
+
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
   };
-  
-  initializeCheckout();
-  
-  // Note: This effect only runs on initial component mount or when token changes
-}, [token, location.search]); // Minimal dependencies
 
+  // Create debounced versions of refresh functions
+  const debouncedRefreshCart = useCallback(
+    debounce(() => refreshCart(), 500),
+    [refreshCart]
+  );
 
+  const debouncedRefreshWallet = useCallback(
+    debounce(() => refreshWallet(), 500),
+    [refreshWallet]
+  );
+
+  let attempt = 0;
 
   useEffect(() => {
-  let timeoutId: NodeJS.Timeout | undefined = undefined;
-  let attempt = 0;
-  const MAX_ATTEMPTS = 10;
-  
-  const checkTransactionStatus = async () => {
-    if (attempt >= MAX_ATTEMPTS || !transactionId || paymentStatus !== "processing" || !token) {
-      setCheckingTransactionStatus(false);
-      return;
-    }
-    
-    try {
-      const response = await axios.get(`${API_BASE_URL}/mpesa/transaction/${transactionId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const { status } = response.data.data.transaction;
-      console.log("Transaction status:", status);
-      
-      if (status === 'COMPLETED') {
-        setPaymentStatus("success");
+    let timeoutId: NodeJS.Timeout | undefined = undefined;
+    // let attempt = 0;
+    const MAX_ATTEMPTS = 30;
+    const MAX_POLLING_TIME = 180000;
+    const startTime = Date.now();
+
+    const checkTransactionStatus = async () => {
+      const elapsedTime = Date.now() - startTime;
+      if (attempt >= MAX_ATTEMPTS || elapsedTime > MAX_POLLING_TIME || !transactionId || paymentStatus !== "processing" || !token) {
         setCheckingTransactionStatus(false);
-        
-        setTimeout(() => {
-          setOrderSuccess(true);
-          setCurrentStep(CheckoutStep.CONFIRMATION);
-          setShowPaymentModal(false);
-        }, 2000);
-        
-        // Call these after status is confirmed
-        debouncedRefreshWallet();
-        debouncedRefreshCart();
-      } else if (status === 'FAILED') {
-        setPaymentStatus("failed");
-        setCheckingTransactionStatus(false);
-      } else {
-        // Still processing, schedule next check with exponential backoff
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/mpesa/transaction/${transactionId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const { status } = response.data.data.transaction;
+        console.log("Transaction status:", status);
+
+        if (status === 'COMPLETED') {
+          setPaymentStatus("success");
+          setCheckingTransactionStatus(false);
+
+          setTimeout(() => {
+            setOrderSuccess(true);
+            setCurrentStep(CheckoutStep.CONFIRMATION);
+            setShowPaymentModal(false);
+          }, 2000);
+
+          // Call these after status is confirmed
+          debouncedRefreshWallet();
+          debouncedRefreshCart();
+        } else if (status === 'FAILED') {
+          setPaymentStatus("failed");
+          setCheckingTransactionStatus(false);
+        } else {
+          // Still processing, schedule next check with exponential backoff
+          attempt++;
+          let delay;
+          if (attempt < 5) {
+            // First 5 attempts: check every 3 seconds
+            delay = 3000;
+          } else if (attempt < 10) {
+            // Next 5 attempts: check every 5 seconds
+            delay = 5000;
+          } else {
+            // Later attempts: exponential backoff up to 10 seconds
+            delay = Math.min(2000 * Math.pow(1.2, attempt - 10), 10000);
+          }
+          timeoutId = setTimeout(checkTransactionStatus, delay);
+        }
+      } catch (error) {
+        console.error("Error checking transaction status:", error);
         attempt++;
-        const delay = Math.min(1000 * Math.pow(2, attempt), 30000); // Cap at 30 seconds
+        const delay = Math.min(3000 * Math.pow(1.3, attempt), 10000);
         timeoutId = setTimeout(checkTransactionStatus, delay);
       }
-    } catch (error) {
-      console.error("Error checking transaction status:", error);
-      attempt++;
-      const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
-      timeoutId = setTimeout(checkTransactionStatus, delay);
+    };
+
+    if (transactionId && paymentStatus === "processing" && token) {
+      setCheckingTransactionStatus(true);
+      checkTransactionStatus();
+
+      const fallbackMessageTimeout = setTimeout(() => {
+        if (paymentStatus === "processing") {
+          toast.info("Still waiting for payment confirmation. If you completed the payment, it will be processed shortly.");
+        }
+      }, 60000);
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(fallbackMessageTimeout);
+      };
     }
-  };
-  
-  if (transactionId && paymentStatus === "processing" && token) {
-    setCheckingTransactionStatus(true);
-    checkTransactionStatus();
-  }
-  
-  return () => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  };
-}, [transactionId, paymentStatus, token]);
 
-const debounce = (func: Function, wait: number) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [transactionId, paymentStatus, token, debouncedRefreshWallet, debouncedRefreshCart]);
 
-// Create debounced versions of refresh functions
-const debouncedRefreshCart = useCallback(
-  debounce(() => refreshCart(), 500),
-  [refreshCart]
-);
 
-const debouncedRefreshWallet = useCallback(
-  debounce(() => refreshWallet(), 500),
-  [refreshWallet]
-);
-
+  // const renderPaymentProcessingContent = () => (
+  //   <div className="text-center py-3">
+  //     <LoadingSpinner size="md" />
+  //     <h5 className="mt-3">Processing Payment</h5>
+  //     <p className="text-muted">
+  //       Please check your phone for the M-Pesa prompt and enter your PIN to complete the payment.
+  //     </p>
+  //     <p className="mb-2">
+  //       Phone: <span className="fw-bold">{mpesaPhoneNumber}</span>
+  //     </p>
+  //     {checkingTransactionStatus && (
+  //       <div className="alert alert-info py-2 small">
+  //         <i className="bi bi-info-circle-fill me-2"></i>
+  //         {attempt < 10 ? (
+  //           "Checking transaction status... Please wait."
+  //         ) : (
+  //           "Still waiting for payment confirmation. This may take a few moments."
+  //         )}
+  //       </div>
+  //     )}
+  //     <div className="mt-3 small text-muted">
+  //       <i className="bi bi-exclamation-triangle me-2"></i>
+  //       Please do not close this window while payment is processing
+  //     </div>
+  //   </div>
+  // );
 
   // Track step changes for animations
   useEffect(() => {
@@ -622,46 +671,46 @@ const debouncedRefreshWallet = useCallback(
   // };
 
   // Replace your processWalletPayment function
-const processWalletPayment = async () => {
-  if (!selectedOrderId) {
-    toast.error("No order selected");
-    return;
-  }
+  const processWalletPayment = async () => {
+    if (!selectedOrderId) {
+      toast.error("No order selected");
+      return;
+    }
 
-  // Prevent double processing
-  if (paymentInProgress) {
-    return;
-  }
+    // Prevent double processing
+    if (paymentInProgress) {
+      return;
+    }
 
-  try {
-    setPaymentInProgress(true);
-    setPaymentStatus("processing");
-    setShowPaymentModal(true);
+    try {
+      setPaymentInProgress(true);
+      setPaymentStatus("processing");
+      setShowPaymentModal(true);
 
-    // Process wallet payment with the order ID
-    const paymentResult = await payWithWallet(selectedOrderId);
+      // Process wallet payment with the order ID
+      const paymentResult = await payWithWallet(selectedOrderId);
 
-    setPaymentStatus("success");
-    
-    // Use a single setTimeout to avoid multiple state updates
-    setTimeout(() => {
-      setOrderSuccess(true);
-      setCurrentStep(CheckoutStep.CONFIRMATION);
-      setShowPaymentModal(false);
-      
-      // Only refresh data when UI updates are complete
-      debouncedRefreshWallet();
-      debouncedRefreshCart();
-    }, 2000);
+      setPaymentStatus("success");
 
-  } catch (error) {
-    console.error("Error processing wallet payment:", error);
-    setPaymentStatus("failed");
-    toast.error("Wallet payment processing failed");
-  } finally {
-    setPaymentInProgress(false);
-  }
-};
+      // Use a single setTimeout to avoid multiple state updates
+      setTimeout(() => {
+        setOrderSuccess(true);
+        setCurrentStep(CheckoutStep.CONFIRMATION);
+        setShowPaymentModal(false);
+
+        // Only refresh data when UI updates are complete
+        debouncedRefreshWallet();
+        debouncedRefreshCart();
+      }, 2000);
+
+    } catch (error) {
+      console.error("Error processing wallet payment:", error);
+      setPaymentStatus("failed");
+      toast.error("Wallet payment processing failed");
+    } finally {
+      setPaymentInProgress(false);
+    }
+  };
 
   // Process M-Pesa payment
   // const processMpesaPayment = async () => {
@@ -682,11 +731,11 @@ const processWalletPayment = async () => {
 
   //     // Start M-Pesa payment with order ID and phone number
   //     const transactionResult = await payOrderWithMpesa(selectedOrderId, mpesaPhoneNumber);
-      
+
   //     if (transactionResult) {
   //       // Save the transaction ID for status checking
   //       setTransactionId(transactionResult);
-        
+
   //       // No need to set success here - we'll wait for the polling to confirm
   //       toast.info("M-Pesa payment initiated. Please check your phone to complete the payment.");
   //     } else {
@@ -703,47 +752,47 @@ const processWalletPayment = async () => {
 
 
   // Replace your processMpesaPayment function
-const processMpesaPayment = async () => {
-  if (!selectedOrderId) {
-    toast.error("No order selected");
-    return;
-  }
-
-  if (!mpesaPhoneNumber) {
-    toast.error("Please enter your M-Pesa phone number");
-    return;
-  }
-
-  // Prevent double processing
-  if (paymentInProgress) {
-    return;
-  }
-
-  try {
-    setPaymentInProgress(true);
-    setPaymentStatus("processing");
-    setShowPaymentModal(true);
-
-    // Start M-Pesa payment with order ID and phone number
-    const transactionResult = await payOrderWithMpesa(selectedOrderId, mpesaPhoneNumber);
-    
-    if (transactionResult) {
-      // Save the transaction ID for status checking
-      setTransactionId(transactionResult);
-      
-      // The transaction status will be checked by the optimized polling effect
-      toast.info("M-Pesa payment initiated. Please check your phone to complete the payment.");
-    } else {
-      throw new Error("Failed to initiate payment");
+  const processMpesaPayment = async () => {
+    if (!selectedOrderId) {
+      toast.error("No order selected");
+      return;
     }
 
-  } catch (error) {
-    console.error("Error processing M-Pesa payment:", error);
-    setPaymentStatus("failed");
-    toast.error("M-Pesa payment processing failed");
-    setPaymentInProgress(false);
-  }
-};
+    if (!mpesaPhoneNumber) {
+      toast.error("Please enter your M-Pesa phone number");
+      return;
+    }
+
+    // Prevent double processing
+    if (paymentInProgress) {
+      return;
+    }
+
+    try {
+      setPaymentInProgress(true);
+      setPaymentStatus("processing");
+      setShowPaymentModal(true);
+
+      // Start M-Pesa payment with order ID and phone number
+      const transactionResult = await payOrderWithMpesa(selectedOrderId, mpesaPhoneNumber);
+
+      if (transactionResult) {
+        // Save the transaction ID for status checking
+        setTransactionId(transactionResult);
+
+        // The transaction status will be checked by the optimized polling effect
+        toast.info("M-Pesa payment initiated. Please check your phone to complete the payment.");
+      } else {
+        throw new Error("Failed to initiate payment");
+      }
+
+    } catch (error) {
+      console.error("Error processing M-Pesa payment:", error);
+      setPaymentStatus("failed");
+      toast.error("M-Pesa payment processing failed");
+      setPaymentInProgress(false);
+    }
+  };
 
   // Handle payment modal close
   const handleClosePaymentModal = () => {
@@ -776,21 +825,21 @@ const processMpesaPayment = async () => {
     clearCheckoutSession();
     navigate("/cart");
   };
-  
+
   const goToShipping = () => {
     if (!isDirectPayment) {
       setCurrentStep(CheckoutStep.SHIPPING);
     }
   };
-  
+
   const goToPayment = () => setCurrentStep(CheckoutStep.PAYMENT);
-  
+
   const goToReviewCart = () => {
     if (!isDirectPayment) {
       setCurrentStep(CheckoutStep.REVIEW_CART);
     }
   };
-  
+
   const goToAccount = () => navigate("/my-account");
 
   // Animation variants
@@ -887,778 +936,778 @@ const processMpesaPayment = async () => {
             >
               {currentStep > CheckoutStep.REVIEW_CART && !isDirectPayment ? (
                 <motion.i
-                className="bi bi-check"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              />
-            ) : 2}
+                  className="bi bi-check"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                />
+              ) : 2}
+            </motion.div>
+            <div className="step-label small mt-1">Shipping</div>
           </motion.div>
-          <div className="step-label small mt-1">Shipping</div>
-        </motion.div>
-        
-        <motion.div
-          className={`progress-step text-center ${currentStep >= CheckoutStep.PAYMENT ? 'active' : ''}`}
-          whileHover={{ scale: 1.05 }}
-        >
-          <motion.div
-            className={`step-circle ${currentStep >= CheckoutStep.PAYMENT ? 'bg-primary text-white' : 'bg-light'}`}
-            initial={false}
-            animate={{
-              backgroundColor: currentStep >= CheckoutStep.PAYMENT ? "#0d6efd" : "#f8f9fa",
-              color: currentStep >= CheckoutStep.PAYMENT ? "#ffffff" : "#212529",
-              scale: currentStep === CheckoutStep.PAYMENT ? 1.1 : 1
-            }}
-            transition={{ duration: 0.3 }}
-          >
-            {currentStep > CheckoutStep.PAYMENT ? (
-              <motion.i
-                className="bi bi-check"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              />
-            ) : 3}
-          </motion.div>
-          <div className="step-label small mt-1">Payment</div>
-        </motion.div>
-        
-        <motion.div
-          className={`progress-step text-center ${currentStep >= CheckoutStep.CONFIRMATION ? 'active' : ''}`}
-          whileHover={{ scale: 1.05 }}
-        >
-          <motion.div
-            className={`step-circle ${currentStep >= CheckoutStep.CONFIRMATION ? 'bg-primary text-white' : 'bg-light'}`}
-            initial={false}
-            animate={{
-              backgroundColor: currentStep >= CheckoutStep.CONFIRMATION ? "#0d6efd" : "#f8f9fa",
-              color: currentStep >= CheckoutStep.CONFIRMATION ? "#ffffff" : "#212529",
-              scale: currentStep === CheckoutStep.CONFIRMATION ? 1.1 : 1
-            }}
-            transition={{ duration: 0.3 }}
-          >
-            4
-          </motion.div>
-          <div className="step-label small mt-1">Confirmation</div>
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
 
-// Render order summary
-const renderOrderSummary = () => {
-  return (
-    <motion.div
-      className="card shadow-sm mb-4 border-0 bg-light"
-      variants={cardVariants}
-      whileHover={{ boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
-    >
-      <div className="card-header bg-light">
-        <h4 className="mb-0">Order Summary</h4>
-      </div>
-      <div className="card-body">
-        {selectedOrderId && isDirectPayment ? (
-          // Show order summary for existing order
-          <>
-            <motion.div
-              className="d-flex justify-content-between mb-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <span>Order ID:</span>
-              <span className="fw-bold">{selectedOrderId}</span>
-            </motion.div>
-            {selectedOrder && (
-              <>
-                <motion.div
-                  className="d-flex justify-content-between mb-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <span>Items:</span>
-                  <span>{selectedOrder.orderItems.length}</span>
-                </motion.div>
-                <hr />
-                <motion.div
-                  className="d-flex justify-content-between fw-bold"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <span>Total:</span>
-                  <motion.span
-                    className="text-primary"
-                    key={total}
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    KSh {total.toLocaleString()}
-                  </motion.span>
-                </motion.div>
-              </>
-            )}
-          </>
-        ) : (
-          // Show cart summary for new order
-          <>
-            <motion.div
-              className="d-flex justify-content-between mb-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <span>Items ({cart?.items.length || 0}):</span>
-              <motion.span
-                key={subtotal}
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                KSh {subtotal.toLocaleString()}
-              </motion.span>
-            </motion.div>
-            <motion.div
-              className="d-flex justify-content-between mb-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <span>Tax (18%):</span>
-              <motion.span
-                key={tax}
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                KSh {tax.toLocaleString()}
-              </motion.span>
-            </motion.div>
-            <hr />
-            <motion.div
-              className="d-flex justify-content-between fw-bold"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <span>Total:</span>
-              <motion.span
-                className="text-primary"
-                key={total}
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                KSh {total.toLocaleString()}
-              </motion.span>
-            </motion.div>
-          </>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-// Loading state
-if (loading || cartLoading || orderLoading || walletLoading) {
-  return (
-    <Layout>
-      <motion.div
-        className="container my-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <div className="text-center py-5">
           <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-              transition: {
-                type: "spring",
-                stiffness: 260,
-                damping: 20
-              }
-            }}
+            className={`progress-step text-center ${currentStep >= CheckoutStep.PAYMENT ? 'active' : ''}`}
+            whileHover={{ scale: 1.05 }}
           >
-            <LoadingSpinner size="lg" />
+            <motion.div
+              className={`step-circle ${currentStep >= CheckoutStep.PAYMENT ? 'bg-primary text-white' : 'bg-light'}`}
+              initial={false}
+              animate={{
+                backgroundColor: currentStep >= CheckoutStep.PAYMENT ? "#0d6efd" : "#f8f9fa",
+                color: currentStep >= CheckoutStep.PAYMENT ? "#ffffff" : "#212529",
+                scale: currentStep === CheckoutStep.PAYMENT ? 1.1 : 1
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {currentStep > CheckoutStep.PAYMENT ? (
+                <motion.i
+                  className="bi bi-check"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                />
+              ) : 3}
+            </motion.div>
+            <div className="step-label small mt-1">Payment</div>
           </motion.div>
-          <motion.p
-            className="mt-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+
+          <motion.div
+            className={`progress-step text-center ${currentStep >= CheckoutStep.CONFIRMATION ? 'active' : ''}`}
+            whileHover={{ scale: 1.05 }}
           >
-            Loading checkout information...
-          </motion.p>
+            <motion.div
+              className={`step-circle ${currentStep >= CheckoutStep.CONFIRMATION ? 'bg-primary text-white' : 'bg-light'}`}
+              initial={false}
+              animate={{
+                backgroundColor: currentStep >= CheckoutStep.CONFIRMATION ? "#0d6efd" : "#f8f9fa",
+                color: currentStep >= CheckoutStep.CONFIRMATION ? "#ffffff" : "#212529",
+                scale: currentStep === CheckoutStep.CONFIRMATION ? 1.1 : 1
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              4
+            </motion.div>
+            <div className="step-label small mt-1">Confirmation</div>
+          </motion.div>
         </div>
       </motion.div>
-    </Layout>
-  );
-}
+    );
+  };
 
-// Direct payment notice - show at the top if in direct payment mode
-const DirectPaymentNotice = () => (
-  <motion.div
-    className="alert alert-info mb-4"
-    initial={{ opacity: 0, y: -20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.2 }}
-  >
-    <div className="d-flex align-items-center">
-      <i className="bi bi-info-circle-fill me-2 fs-4"></i>
-      <div>
-        <h5 className="mb-1">Complete Your Order Payment</h5>
-        <p className="mb-0">You are completing payment for order #{selectedOrderId}. Choose a payment method to proceed.</p>
-      </div>
-    </div>
-  </motion.div>
-);
-
-// Empty cart state - only show this if we're on review cart step and not in direct payment mode
-if ((!cart || cart.items.length === 0) && currentStep === CheckoutStep.REVIEW_CART && !isDirectPayment) {
-  return (
-    <Layout>
+  // Render order summary
+  const renderOrderSummary = () => {
+    return (
       <motion.div
-        className="container my-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        className="card shadow-sm mb-4 border-0 bg-light"
+        variants={cardVariants}
+        whileHover={{ boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
       >
+        <div className="card-header bg-light">
+          <h4 className="mb-0">Order Summary</h4>
+        </div>
+        <div className="card-body">
+          {selectedOrderId && isDirectPayment ? (
+            // Show order summary for existing order
+            <>
+              <motion.div
+                className="d-flex justify-content-between mb-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span>Order ID:</span>
+                <span className="fw-bold">{selectedOrderId}</span>
+              </motion.div>
+              {selectedOrder && (
+                <>
+                  <motion.div
+                    className="d-flex justify-content-between mb-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <span>Items:</span>
+                    <span>{selectedOrder.orderItems.length}</span>
+                  </motion.div>
+                  <hr />
+                  <motion.div
+                    className="d-flex justify-content-between fw-bold"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <span>Total:</span>
+                    <motion.span
+                      className="text-primary"
+                      key={total}
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      KSh {total.toLocaleString()}
+                    </motion.span>
+                  </motion.div>
+                </>
+              )}
+            </>
+          ) : (
+            // Show cart summary for new order
+            <>
+              <motion.div
+                className="d-flex justify-content-between mb-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span>Items ({cart?.items.length || 0}):</span>
+                <motion.span
+                  key={subtotal}
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  KSh {subtotal.toLocaleString()}
+                </motion.span>
+              </motion.div>
+              <motion.div
+                className="d-flex justify-content-between mb-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <span>Tax (18%):</span>
+                <motion.span
+                  key={tax}
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  KSh {tax.toLocaleString()}
+                </motion.span>
+              </motion.div>
+              <hr />
+              <motion.div
+                className="d-flex justify-content-between fw-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <span>Total:</span>
+                <motion.span
+                  className="text-primary"
+                  key={total}
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  KSh {total.toLocaleString()}
+                </motion.span>
+              </motion.div>
+            </>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Loading state
+  if (loading || cartLoading || orderLoading || walletLoading) {
+    return (
+      <Layout>
         <motion.div
-          className="text-center my-5 py-5 bg-light rounded shadow-sm"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="container my-5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="text-center py-5">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{
+                scale: 1,
+                opacity: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 20
+                }
+              }}
+            >
+              <LoadingSpinner size="lg" />
+            </motion.div>
+            <motion.p
+              className="mt-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Loading checkout information...
+            </motion.p>
+          </div>
+        </motion.div>
+      </Layout>
+    );
+  }
+
+  // Direct payment notice - show at the top if in direct payment mode
+  const DirectPaymentNotice = () => (
+    <motion.div
+      className="alert alert-info mb-4"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <div className="d-flex align-items-center">
+        <i className="bi bi-info-circle-fill me-2 fs-4"></i>
+        <div>
+          <h5 className="mb-1">Complete Your Order Payment</h5>
+          <p className="mb-0">You are completing payment for order #{selectedOrderId}. Choose a payment method to proceed.</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // Empty cart state - only show this if we're on review cart step and not in direct payment mode
+  if ((!cart || cart.items.length === 0) && currentStep === CheckoutStep.REVIEW_CART && !isDirectPayment) {
+    return (
+      <Layout>
+        <motion.div
+          className="container my-5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
           <motion.div
-            className="mb-4"
-            initial={{ scale: 0.5, opacity: 0 }}
+            className="text-center my-5 py-5 bg-light rounded shadow-sm"
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 15,
-              delay: 0.2
-            }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <i className="bi bi-cart-x" style={{ fontSize: "4rem", color: "#6c757d" }}></i>
-          </motion.div>
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Your cart is empty
-          </motion.h3>
-          <motion.p
-            className="text-muted"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            Looks like you haven't added any items to your cart yet.
-          </motion.p>
-          <motion.button
-            onClick={() => navigate("/shop")}
-            className="btn btn-primary mt-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <i className="bi bi-shop me-2"></i>Continue Shopping
-          </motion.button>
-        </motion.div>
-      </motion.div>
-    </Layout>
-  );
-}
-
-return (
-  <Layout>
-    <motion.div
-      className="container my-5"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      ref={pageRef}
-    >
-      <motion.div className="mb-4" variants={itemVariants}>
-        <motion.div
-          className="d-flex align-items-center mb-4"
-          variants={itemVariants}
-        >
-          <h2 className="mb-0">Checkout</h2>
-          {wallet && (
             <motion.div
-              className="ms-auto bg-light rounded-pill px-4 py-2 shadow-sm"
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+              className="mb-4"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
               transition={{
                 type: "spring",
                 stiffness: 300,
-                damping: 25,
-                delay: 0.3
-              }}
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.1)"
+                damping: 15,
+                delay: 0.2
               }}
             >
-              <span className="text-muted me-2">Wallet Balance:</span>
-              <motion.span
-                className="fw-bold text-success"
-                key={wallet.balance} // Re-render when balance changes
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                KSh {wallet.balance?.toLocaleString() || '0'}
-              </motion.span>
+              <i className="bi bi-cart-x" style={{ fontSize: "4rem", color: "#6c757d" }}></i>
             </motion.div>
-          )}
+            <motion.h3
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Your cart is empty
+            </motion.h3>
+            <motion.p
+              className="text-muted"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Looks like you haven't added any items to your cart yet.
+            </motion.p>
+            <motion.button
+              onClick={() => navigate("/shop")}
+              className="btn btn-primary mt-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <i className="bi bi-shop me-2"></i>Continue Shopping
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <motion.div
+        className="container my-5"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        ref={pageRef}
+      >
+        <motion.div className="mb-4" variants={itemVariants}>
+          <motion.div
+            className="d-flex align-items-center mb-4"
+            variants={itemVariants}
+          >
+            <h2 className="mb-0">Checkout</h2>
+            {wallet && (
+              <motion.div
+                className="ms-auto bg-light rounded-pill px-4 py-2 shadow-sm"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25,
+                  delay: 0.3
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.1)"
+                }}
+              >
+                <span className="text-muted me-2">Wallet Balance:</span>
+                <motion.span
+                  className="fw-bold text-success"
+                  key={wallet.balance} // Re-render when balance changes
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  KSh {wallet.balance?.toLocaleString() || '0'}
+                </motion.span>
+              </motion.div>
+            )}
+          </motion.div>
+
+          {renderProgressSteps()}
         </motion.div>
 
-        {renderProgressSteps()}
-      </motion.div>
+        {/* Direct Payment Notice */}
+        {isDirectPayment && <DirectPaymentNotice />}
 
-      {/* Direct Payment Notice */}
-      {isDirectPayment && <DirectPaymentNotice />}
-
-      <AnimatePresence mode="wait" custom={getDirection()}>
-        {/* Step 1: Review Cart - Only show if not in direct payment mode */}
-        {currentStep === CheckoutStep.REVIEW_CART && !isDirectPayment && (
-          <motion.div
-            key="review-cart"
-            custom={getDirection()}
-            variants={stepVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="row"
-          >
-            <motion.div className="col-lg-8" variants={itemVariants}>
-              <motion.div
-                className="card shadow-sm mb-4"
-                variants={cardVariants}
-                whileHover={{ boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
-              >
-                <div className="card-header bg-light">
-                  <h4 className="mb-0">Review Your Cart</h4>
-                </div>
-                <div className="card-body">
-                  <AnimatePresence>
-                    {cart && cart.items.map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        className="row mb-3 py-3 border-bottom"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                          transition: {
-                            delay: index * 0.1,
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 25
-                          }
-                        }}
-                        exit={{ opacity: 0, y: -20 }}
-                        whileHover={{
-                          backgroundColor: "rgba(0,0,0,0.02)",
-                          transition: { duration: 0.2 }
-                        }}
-                      >
-                        <div className="col-md-2">
-                          <motion.img
-                            src={`${API_BASE_URL}/uploads/${item.product.images[0]}`}
-                            alt={item.product.name}
-                            className="img-fluid rounded"
-                            whileHover={{ scale: 1.1 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          />
-                        </div>
-                        <div className="col-md-5">
-                          <h5 className="fs-6">{item.product.name}</h5>
-                          <motion.span
-                            className="badge bg-light text-dark"
-                            whileHover={{ scale: 1.1 }}
-                          >
-                            Quantity: {item.quantity}
-                          </motion.span>
-                        </div>
-                        <div className="col-md-5 text-end">
-                          <div className="text-muted">
-                            <small>KSh {item.product.currentPrice.toLocaleString()} x {item.quantity}</small>
+        <AnimatePresence mode="wait" custom={getDirection()}>
+          {/* Step 1: Review Cart - Only show if not in direct payment mode */}
+          {currentStep === CheckoutStep.REVIEW_CART && !isDirectPayment && (
+            <motion.div
+              key="review-cart"
+              custom={getDirection()}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="row"
+            >
+              <motion.div className="col-lg-8" variants={itemVariants}>
+                <motion.div
+                  className="card shadow-sm mb-4"
+                  variants={cardVariants}
+                  whileHover={{ boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
+                >
+                  <div className="card-header bg-light">
+                    <h4 className="mb-0">Review Your Cart</h4>
+                  </div>
+                  <div className="card-body">
+                    <AnimatePresence>
+                      {cart && cart.items.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          className="row mb-3 py-3 border-bottom"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                            transition: {
+                              delay: index * 0.1,
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 25
+                            }
+                          }}
+                          exit={{ opacity: 0, y: -20 }}
+                          whileHover={{
+                            backgroundColor: "rgba(0,0,0,0.02)",
+                            transition: { duration: 0.2 }
+                          }}
+                        >
+                          <div className="col-md-2">
+                            <motion.img
+                              src={`${API_BASE_URL}/uploads/${item.product.images[0]}`}
+                              alt={item.product.name}
+                              className="img-fluid rounded"
+                              whileHover={{ scale: 1.1 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            />
                           </div>
-                          <motion.div
-                            className="fw-bold"
-                            key={item.subtotal}
-                            initial={{ scale: 0.9 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            KSh {item.subtotal.toLocaleString()}
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-                <div className="card-footer bg-light d-flex justify-content-between">
-                  <motion.button
-                    className="btn btn-outline-secondary"
-                    onClick={goToCart}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <i className="bi bi-arrow-left me-2"></i>Back to Cart
-                  </motion.button>
-                  <motion.button
-                    className="btn btn-primary"
-                    onClick={goToShipping}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    disabled={!cart || cart.items.length === 0}
-                  >
-                    Continue to Shipping<i className="bi bi-arrow-right ms-2"></i>
-                  </motion.button>
-                </div>
+                          <div className="col-md-5">
+                            <h5 className="fs-6">{item.product.name}</h5>
+                            <motion.span
+                              className="badge bg-light text-dark"
+                              whileHover={{ scale: 1.1 }}
+                            >
+                              Quantity: {item.quantity}
+                            </motion.span>
+                          </div>
+                          <div className="col-md-5 text-end">
+                            <div className="text-muted">
+                              <small>KSh {item.product.currentPrice.toLocaleString()} x {item.quantity}</small>
+                            </div>
+                            <motion.div
+                              className="fw-bold"
+                              key={item.subtotal}
+                              initial={{ scale: 0.9 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              KSh {item.subtotal.toLocaleString()}
+                            </motion.div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                  <div className="card-footer bg-light d-flex justify-content-between">
+                    <motion.button
+                      className="btn btn-outline-secondary"
+                      onClick={goToCart}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <i className="bi bi-arrow-left me-2"></i>Back to Cart
+                    </motion.button>
+                    <motion.button
+                      className="btn btn-primary"
+                      onClick={goToShipping}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={!cart || cart.items.length === 0}
+                    >
+                      Continue to Shipping<i className="bi bi-arrow-right ms-2"></i>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              </motion.div>
+              <motion.div className="col-lg-4" variants={itemVariants}>
+                {renderOrderSummary()}
               </motion.div>
             </motion.div>
-            <motion.div className="col-lg-4" variants={itemVariants}>
-              {renderOrderSummary()}
-            </motion.div>
-          </motion.div>
-        )}
+          )}
 
-        {/* Step 2: Shipping Information - Only show if not in direct payment mode */}
-        {currentStep === CheckoutStep.SHIPPING && !isDirectPayment && (
-          <motion.div
-            key="shipping"
-            custom={getDirection()}
-            variants={stepVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="row"
-          >
-            <motion.div className="col-lg-8" variants={itemVariants}>
-              <motion.div
-                className="card shadow-sm mb-4"
-                variants={cardVariants}
-                whileHover={{ boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
-              >
-                <div className="card-header bg-light">
-                  <h4 className="mb-0">Shipping Address</h4>
-                </div>
-                <div className="card-body">
-                  {availableAddresses.length > 0 ? (
-                    <Form noValidate validated={validated} onSubmit={handleShippingSubmit}>
-                      <div className="address-selection mb-4">
-                        <motion.p
-                          className="mb-3"
-                          variants={{
-                            hidden: { opacity: 0 },
-                            visible: { opacity: 1, transition: { delay: 0.1 } },
-                          }}
-                        >
-                          Please select an address for delivery:
-                        </motion.p>
+          {/* Step 2: Shipping Information - Only show if not in direct payment mode */}
+          {currentStep === CheckoutStep.SHIPPING && !isDirectPayment && (
+            <motion.div
+              key="shipping"
+              custom={getDirection()}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="row"
+            >
+              <motion.div className="col-lg-8" variants={itemVariants}>
+                <motion.div
+                  className="card shadow-sm mb-4"
+                  variants={cardVariants}
+                  whileHover={{ boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
+                >
+                  <div className="card-header bg-light">
+                    <h4 className="mb-0">Shipping Address</h4>
+                  </div>
+                  <div className="card-body">
+                    {availableAddresses.length > 0 ? (
+                      <Form noValidate validated={validated} onSubmit={handleShippingSubmit}>
+                        <div className="address-selection mb-4">
+                          <motion.p
+                            className="mb-3"
+                            variants={{
+                              hidden: { opacity: 0 },
+                              visible: { opacity: 1, transition: { delay: 0.1 } },
+                            }}
+                          >
+                            Please select an address for delivery:
+                          </motion.p>
 
-                        <motion.div
-                          className="address-cards"
-                          variants={{
-                            hidden: { opacity: 0 },
-                            visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
-                          }}
-                        >
-                          {availableAddresses.map((address) => (
-                            <motion.div
-                              key={address.id}
-                              className={`card mb-3 ${selectedAddress?.id === address.id ? 'border-primary' : ''}`}
-                              variants={itemVariants}
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <div className="card-body p-3">
-                                <div className="d-flex align-items-center">
-                                  <div className="form-check">
-                                    <input
-                                      className="form-check-input"
-                                      type="radio"
-                                      name="addressRadio"
-                                      id={`address-${address.id}`}
-                                      checked={selectedAddress?.id === address.id}
-                                      onChange={() => handleAddressSelect(address)}
-                                      required
-                                    />
-                                  </div>
-                                  <div className="ms-3 flex-grow-1">
-                                    <p className="mb-1">
-                                      {address.address}, {address.city}
-                                      {address.state && `, ${address.state}`}
-                                      {address.zip && ` ${address.zip}`}
-                                      {address.country && `, ${address.country}`}
-                                    </p>
-                                    {address.phoneNumber && (
-                                      <p className="text-muted mb-0 small">
-                                        <i className="bi bi-telephone me-1"></i>
-                                        {address.phoneNumber}
+                          <motion.div
+                            className="address-cards"
+                            variants={{
+                              hidden: { opacity: 0 },
+                              visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+                            }}
+                          >
+                            {availableAddresses.map((address) => (
+                              <motion.div
+                                key={address.id}
+                                className={`card mb-3 ${selectedAddress?.id === address.id ? 'border-primary' : ''}`}
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.02 }}
+                              >
+                                <div className="card-body p-3">
+                                  <div className="d-flex align-items-center">
+                                    <div className="form-check">
+                                      <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="addressRadio"
+                                        id={`address-${address.id}`}
+                                        checked={selectedAddress?.id === address.id}
+                                        onChange={() => handleAddressSelect(address)}
+                                        required
+                                      />
+                                    </div>
+                                    <div className="ms-3 flex-grow-1">
+                                      <p className="mb-1">
+                                        {address.address}, {address.city}
+                                        {address.state && `, ${address.state}`}
+                                        {address.zip && ` ${address.zip}`}
+                                        {address.country && `, ${address.country}`}
                                       </p>
+                                      {address.phoneNumber && (
+                                        <p className="text-muted mb-0 small">
+                                          <i className="bi bi-telephone me-1"></i>
+                                          {address.phoneNumber}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {selectedAddress?.id === address.id && (
+                                      <Badge bg="primary" className="ms-2">Selected</Badge>
                                     )}
                                   </div>
-                                  {selectedAddress?.id === address.id && (
-                                    <Badge bg="primary" className="ms-2">Selected</Badge>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </motion.div>
+
+                          <motion.div
+                            className="text-end"
+                            variants={{
+                              hidden: { opacity: 0, y: 20 },
+                              visible: { opacity: 1, y: 0, transition: { delay: 0.3 } },
+                            }}
+                          >
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              onClick={() => navigate("/my-account")}
+                              className="mt-2"
+                            >
+                              <i className="bi bi-plus-circle me-1"></i>
+                              Add New Address
+                            </Button>
+                          </motion.div>
+
+                          {validated && !selectedAddress && (
+                            <motion.div
+                              className="text-danger mt-2"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                            >
+                              Please select a delivery address.
+                            </motion.div>
+                          )}
+                        </div>
+
+                        <motion.hr
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: { opacity: 1, transition: { delay: 0.4 } },
+                          }}
+                        />
+
+                        {/* Payment Method Selection */}
+                        <motion.div
+                          className="payment-selection mt-4"
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: { opacity: 1, transition: { delay: 0.5 } },
+                          }}
+                        >
+                          <h5 className="mb-3">Payment Method</h5>
+
+                          <div className="payment-options">
+                            {paymentMethods?.map((method) => (
+                              <motion.div
+                                className={`card mb-3 ${selectedPaymentType === method.id ? 'border-primary' : ''}`}
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.02 }}
+                                onClick={() => handlePaymentSelection(method.id)}
+                                key={method.id}
+                              >
+                                <div className="card-body p-3">
+                                  <div className="d-flex align-items-center">
+                                    <div className="form-check">
+                                      <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="paymentRadio"
+                                        id={`payment-${method.type}`}
+                                        checked={selectedPaymentType === method.id}
+                                        onChange={() => handlePaymentSelection(method.id)}
+                                        required
+                                      />
+                                    </div>
+                                    <div className="ms-3 flex-grow-1">
+                                      <div className="d-flex align-items-center">
+                                        <i
+                                          className={`bi bi-${method.type === 'WALLET' ? 'wallet2' : 'phone'} me-2 text-${method.type === 'WALLET' ? 'primary' : 'success'}`}
+                                          style={{ fontSize: "1.25rem" }}
+                                        ></i>
+                                        <div>
+                                          <p className="mb-0 fw-medium">{method.type === 'WALLET' ? 'Wallet Balance' : 'M-Pesa'}</p>
+                                          {method.type === "MPESA" && method.details && (
+                                            <p className="text-muted mb-0 small">Phone: {method.details}</p>
+                                          )}
+
+                                          {method.type === "WALLET" && wallet && (
+                                            <Form.Label className="small">
+                                              <span className="text-muted me-2">Wallet Balance:</span>
+                                              <motion.span
+                                                className={wallet.balance < total ? "fw-bold text-danger" : "fw-bold text-success"}
+                                                key={wallet.balance || 0}
+                                                initial={{ scale: 0.9 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ type: "spring", stiffness: 300 }}
+                                              >
+                                                KSh {wallet.balance?.toLocaleString() || '0'}
+                                              </motion.span>
+                                            </Form.Label>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {selectedPaymentType === method.id && (
+                                      <Badge bg="primary" className="ms-2">Selected</Badge>
+                                    )}
+                                  </div>
+
+                                  {method.type === "WALLET" && insufficientFunds && selectedPaymentType === method.id && (
+                                    <div className="alert alert-warning mt-2 mb-0 py-2 small">
+                                      <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                      Insufficient balance. Please top up your wallet or choose another payment method.
+                                      <div className="mt-1">
+                                        <Button
+                                          size="sm"
+                                          variant="outline-primary"
+                                          className="me-2"
+                                          // onClick={() => navigate("/my-account?tab=wallet")}
+                                          onClick={() => navigate('/my-account', { state: { tab: 'wallet' } })}
+                                        >
+                                          Top Up Wallet
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {method.type === "MPESA" && !method.details && (
+                                    <div className="alert alert-warning mt-2 mb-0 py-2 small">
+                                      <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                      Please add a phone number in your account settings.
+                                      <div className="mt-1">
+                                        <Button
+                                          size="sm"
+                                          variant="outline-primary"
+                                          onClick={() => navigate("/my-account?tab=profile")}
+                                        >
+                                          Update Profile
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {method.type === "MPESA" && (
+                                    <Form.Label className="small">
+                                      *To use a different M-Pesa number, update it in your account
+                                    </Form.Label>
                                   )}
                                 </div>
-                              </div>
+                              </motion.div>
+                            ))}
+                          </div>
+
+                          {validated && !selectedPaymentType && (
+                            <motion.div
+                              className="text-danger mt-2"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                            >
+                              Please select a payment method.
                             </motion.div>
-                          ))}
+                          )}
                         </motion.div>
 
                         <motion.div
-                          className="text-end"
+                          className="d-flex justify-content-between mt-4"
                           variants={{
                             hidden: { opacity: 0, y: 20 },
-                            visible: { opacity: 1, y: 0, transition: { delay: 0.3 } },
+                            visible: { opacity: 1, y: 0, transition: { delay: 0.6 } },
                           }}
                         >
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            onClick={() => navigate("/my-account")}
-                            className="mt-2"
+                          <motion.button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={goToReviewCart}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            <i className="bi bi-plus-circle me-1"></i>
-                            Add New Address
-                          </Button>
+                            <i className="bi bi-arrow-left me-2"></i>Back to Cart
+                          </motion.button>
+                          <motion.button
+                            type="submit"
+                            className="btn btn-primary"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            disabled={
+                              !selectedAddress ||
+                              !selectedPaymentType ||
+                              (paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "WALLET" && insufficientFunds) ||
+                              (paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "MPESA" && !paymentMethods?.find(method => method.id === selectedPaymentType)?.details)
+                            }
+                          >
+                            Place Order<i className="bi bi-arrow-right ms-2"></i>
+                          </motion.button>
                         </motion.div>
-
-                        {validated && !selectedAddress && (
-                          <motion.div
-                            className="text-danger mt-2"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                          >
-                            Please select a delivery address.
-                          </motion.div>
-                        )}
-                      </div>
-
-                      <motion.hr
-                        variants={{
-                          hidden: { opacity: 0 },
-                          visible: { opacity: 1, transition: { delay: 0.4 } },
-                        }}
-                      />
-
-                      {/* Payment Method Selection */}
+                      </Form>
+                    ) : (
                       <motion.div
-                        className="payment-selection mt-4"
-                        variants={{
-                          hidden: { opacity: 0 },
-                          visible: { opacity: 1, transition: { delay: 0.5 } },
-                        }}
-                      >
-                        <h5 className="mb-3">Payment Method</h5>
-
-                        <div className="payment-options">
-                          {paymentMethods?.map((method) => (
-                            <motion.div
-                              className={`card mb-3 ${selectedPaymentType === method.id ? 'border-primary' : ''}`}
-                              variants={itemVariants}
-                              whileHover={{ scale: 1.02 }}
-                              onClick={() => handlePaymentSelection(method.id)}
-                              key={method.id}
-                            >
-                              <div className="card-body p-3">
-                                <div className="d-flex align-items-center">
-                                  <div className="form-check">
-                                    <input
-                                      className="form-check-input"
-                                      type="radio"
-                                      name="paymentRadio"
-                                      id={`payment-${method.type}`}
-                                      checked={selectedPaymentType === method.id}
-                                      onChange={() => handlePaymentSelection(method.id)}
-                                      required
-                                    />
-                                  </div>
-                                  <div className="ms-3 flex-grow-1">
-                                    <div className="d-flex align-items-center">
-                                      <i
-                                        className={`bi bi-${method.type === 'WALLET' ? 'wallet2' : 'phone'} me-2 text-${method.type === 'WALLET' ? 'primary' : 'success'}`}
-                                        style={{ fontSize: "1.25rem" }}
-                                      ></i>
-                                      <div>
-                                        <p className="mb-0 fw-medium">{method.type === 'WALLET' ? 'Wallet Balance' : 'M-Pesa'}</p>
-                                        {method.type === "MPESA" && method.details && (
-                                          <p className="text-muted mb-0 small">Phone: {method.details}</p>
-                                        )}
-
-                                        {method.type === "WALLET" && wallet && (
-                                          <Form.Label className="small">
-                                            <span className="text-muted me-2">Wallet Balance:</span>
-                                            <motion.span
-                                              className={wallet.balance < total ? "fw-bold text-danger" : "fw-bold text-success"}
-                                              key={wallet.balance || 0}
-                                              initial={{ scale: 0.9 }}
-                                              animate={{ scale: 1 }}
-                                              transition={{ type: "spring", stiffness: 300 }}
-                                            >
-                                              KSh {wallet.balance?.toLocaleString() || '0'}
-                                            </motion.span>
-                                          </Form.Label>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  {selectedPaymentType === method.id && (
-                                    <Badge bg="primary" className="ms-2">Selected</Badge>
-                                  )}
-                                </div>
-
-                                {method.type === "WALLET" && insufficientFunds && selectedPaymentType === method.id && (
-                                  <div className="alert alert-warning mt-2 mb-0 py-2 small">
-                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                    Insufficient balance. Please top up your wallet or choose another payment method.
-                                    <div className="mt-1">
-                                      <Button
-                                        size="sm"
-                                        variant="outline-primary"
-                                        className="me-2"
-                                        // onClick={() => navigate("/my-account?tab=wallet")}
-                                        onClick={() => navigate('/my-account', { state: { tab: 'wallet' } })}
-                                      >
-                                        Top Up Wallet
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {method.type === "MPESA" && !method.details && (
-                                  <div className="alert alert-warning mt-2 mb-0 py-2 small">
-                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                    Please add a phone number in your account settings.
-                                    <div className="mt-1">
-                                      <Button
-                                        size="sm"
-                                        variant="outline-primary"
-                                        onClick={() => navigate("/my-account?tab=profile")}
-                                      >
-                                        Update Profile
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {method.type === "MPESA" && (
-                                  <Form.Label className="small">
-                                    *To use a different M-Pesa number, update it in your account
-                                  </Form.Label>
-                                )}
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-
-                        {validated && !selectedPaymentType && (
-                          <motion.div
-                            className="text-danger mt-2"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                          >
-                            Please select a payment method.
-                          </motion.div>
-                        )}
-                      </motion.div>
-
-                      <motion.div
-                        className="d-flex justify-content-between mt-4"
+                        className="text-center py-4"
                         variants={{
                           hidden: { opacity: 0, y: 20 },
-                          visible: { opacity: 1, y: 0, transition: { delay: 0.6 } },
+                          visible: { opacity: 1, y: 0, transition: { delay: 0.2 } },
                         }}
                       >
+                        <motion.div
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                        >
+                          <i className="bi bi-house-x" style={{ fontSize: "3rem", color: "#6c757d" }}></i>
+                        </motion.div>
+                        <h5 className="mt-3">No shipping addresses found</h5>
+                        <p className="text-muted">You need to add a shipping address to continue.</p>
                         <motion.button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          onClick={goToReviewCart}
+                          className="btn btn-primary mt-2"
+                          onClick={() => navigate("/my-account?tab=addresses")}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <i className="bi bi-arrow-left me-2"></i>Back to Cart
-                        </motion.button>
-                        <motion.button
-                          type="submit"
-                          className="btn btn-primary"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          disabled={
-                            !selectedAddress ||
-                            !selectedPaymentType ||
-                            (paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "WALLET" && insufficientFunds) ||
-                            (paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "MPESA" && !paymentMethods?.find(method => method.id === selectedPaymentType)?.details)
-                          }
-                        >
-                          Place Order<i className="bi bi-arrow-right ms-2"></i>
+                          <i className="bi bi-plus-circle me-2"></i>
+                          Add New Address
                         </motion.button>
                       </motion.div>
-                    </Form>
-                  ) : (
-                    <motion.div
-                      className="text-center py-4"
-                      variants={{
-                        hidden: { opacity: 0, y: 20 },
-                        visible: { opacity: 1, y: 0, transition: { delay: 0.2 } },
-                      }}
-                    >
-                      <motion.div
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                      >
-                        <i className="bi bi-house-x" style={{ fontSize: "3rem", color: "#6c757d" }}></i>
-                      </motion.div>
-                      <h5 className="mt-3">No shipping addresses found</h5>
-                      <p className="text-muted">You need to add a shipping address to continue.</p>
-                      <motion.button
-                        className="btn btn-primary mt-2"
-                        onClick={() => navigate("/my-account?tab=addresses")}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Add New Address
-                      </motion.button>
-                    </motion.div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-            <motion.div className="col-lg-4" variants={itemVariants}>
-              {renderOrderSummary()}
-            </motion.div>
+              <motion.div className="col-lg-4" variants={itemVariants}>
+                {renderOrderSummary()}
+              </motion.div>
 
-            {/* Confirmation Modal for Order Placement */}
-            <Modal
-              show={showConfirmationModal}
-              onHide={() => setShowConfirmationModal(false)}
-              centered
-            >
-              <Modal.Header closeButton>
-                <Modal.Title>Confirm Order</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <p>Are you sure you want to place this order?</p>
+              {/* Confirmation Modal for Order Placement */}
+              <Modal
+                show={showConfirmationModal}
+                onHide={() => setShowConfirmationModal(false)}
+                centered
+              >
+                <Modal.Header closeButton>
+                  <Modal.Title>Confirm Order</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <p>Are you sure you want to place this order?</p>
 
-                <div className="order-summary-modal">
+                  <div className="order-summary-modal">
                     <div className="d-flex justify-content-between mb-2">
                       <span>Shipping Address:</span>
                       <span className="text-end">
@@ -1908,15 +1957,15 @@ return (
                             <div className="mb-3">
                               <label className="form-label">M-Pesa Phone Number</label>
                               <div className="input-group">
-                                <input 
-                                  type="text" 
-                                  className="form-control" 
+                                <input
+                                  type="text"
+                                  className="form-control"
                                   value={mpesaPhoneNumber}
                                   onChange={(e) => setMpesaPhoneNumber(e.target.value)}
                                   readOnly
                                 />
-                                <button 
-                                  className="btn btn-outline-secondary" 
+                                <button
+                                  className="btn btn-outline-secondary"
                                   type="button"
                                   onClick={() => {
                                     if (profile && profile.phoneNumber) {
@@ -1948,7 +1997,7 @@ return (
                             : processMpesaPayment
                         }
                         disabled={
-                          paymentInProgress || 
+                          paymentInProgress ||
                           !selectedPaymentType ||
                           (paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "WALLET" && insufficientFunds)
                         }
@@ -2024,7 +2073,7 @@ return (
               </motion.div>
             </motion.div>
           )}
-          
+
           {/* Step 4: Confirmation */}
           {currentStep === CheckoutStep.CONFIRMATION && (
             <motion.div
@@ -2113,8 +2162,8 @@ return (
 
                         <div className="alert alert-success mb-0 small">
                           <i className="bi bi-check-circle-fill me-2"></i>
-                          {paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "WALLET" 
-                            ? "Payment completed successfully using your wallet balance." 
+                          {paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "WALLET"
+                            ? "Payment completed successfully using your wallet balance."
                             : "M-Pesa payment completed successfully."}
                         </div>
                       </>
@@ -2164,10 +2213,10 @@ return (
         >
           <Modal.Header closeButton>
             <Modal.Title>
-              {paymentStatus === "processing" 
-                ? "Processing Payment" 
-                : paymentStatus === "success" 
-                  ? "Payment Successful" 
+              {paymentStatus === "processing"
+                ? "Processing Payment"
+                : paymentStatus === "success"
+                  ? "Payment Successful"
                   : "Payment Failed"}
             </Modal.Title>
           </Modal.Header>
@@ -2209,7 +2258,7 @@ return (
                 </div>
                 <h5>Payment Successful!</h5>
                 <p className="text-muted">Your payment has been processed successfully.</p>
-                
+
                 <div className="alert alert-success py-2 mt-3">
                   <i className="bi bi-shield-check me-2"></i>
                   Transaction completed
@@ -2224,7 +2273,7 @@ return (
                 </div>
                 <h5>Payment Failed</h5>
                 <p className="text-muted">There was an issue processing your payment. Please try again.</p>
-                
+
                 <div className="alert alert-danger py-2 mt-3">
                   <i className="bi bi-exclamation-triangle-fill me-2"></i>
                   Transaction was not completed
@@ -2234,8 +2283,8 @@ return (
           </Modal.Body>
           <Modal.Footer>
             {paymentStatus === "processing" && (
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleClosePaymentModal}
                 disabled={checkingTransactionStatus}
               >
@@ -2257,8 +2306,8 @@ return (
                 <Button variant="secondary" onClick={handleClosePaymentModal}>
                   Cancel
                 </Button>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={
                     paymentMethods?.find(method => method.id === selectedPaymentType)?.type === "WALLET"
                       ? processWalletPayment

@@ -15,6 +15,7 @@ const PaymentMethods = () => {
   const [currentPaymentMethod, setCurrentPaymentMethod] = useState<any>(null);
   const { addPaymentMethod, token, deletePaymentMethod, paymentMethods = [], fetchPaymentMethods } = useContext(UserContext) || {};
 
+
   const handleAddPaymentMethod = async () => {
     if (!mpesaNumber) {
       toast.error("Please enter your MPESA number");
@@ -85,6 +86,18 @@ const PaymentMethods = () => {
     }
   };
 
+  const shouldShowDeleteButton = (method: any) => {
+    if (method.type === 'WALLET') {
+      return false;
+    }
+    
+    if (paymentMethods.length <= 2) {
+      return false;
+    }
+    
+    return method.type === 'MPESA';
+  };
+
   return (
     <>
       <h5 className="mt-4">Payment Methods</h5>
@@ -107,9 +120,11 @@ const PaymentMethods = () => {
                 <td>{method.type}</td>
                 <td>{method.details}</td>
                 <td>
-                  <Button size="sm" variant="danger" onClick={() => handleDeletePaymentMethod(method.id)}>
-                    <i className="bi bi-trash-fill"></i> Delete
-                  </Button>
+                {shouldShowDeleteButton(method) && (
+                    <Button size="sm" variant="danger" onClick={() => handleDeletePaymentMethod(method.id)}>
+                      <i className="bi bi-trash-fill"></i> Delete
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))

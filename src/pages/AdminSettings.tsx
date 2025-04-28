@@ -1,785 +1,560 @@
-// pages/settings/Settings.tsx
-import React, { useState, useEffect } from 'react';
+// pages/admin/Profile.tsx
+import React, { useState, useEffect, useContext } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
-import '../styles/Admin/Settings.css';
+import { UserContext } from '../contexts/UserContext';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../api/main';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaUserEdit, FaSave, FaEye, FaEyeSlash } from 'react-icons/fa';
 
-interface StoreSettings {
-    general: {
-        storeName: string;
-        storeEmail: string;
-        storePhone: string;
-        storeAddress: string;
-        storeLogo: string;
-        currencySymbol: string;
-        timeZone: string;
-    };
-    payment: {
-        acceptedMethods: string[];
-        paypalEmail: string;
-        bankDetails: string;
-        mobileMoney: {
-            enabled: boolean;
-            providers: string[];
-        };
-    };
-    shipping: {
-        methods: {
-            id: string;
-            name: string;
-            cost: number;
-            enabled: boolean;
-        }[];
-        freeShippingThreshold: number;
-    };
-    email: {
-        fromName: string;
-        fromEmail: string;
-        emailTemplate: string;
-        orderConfirmation: boolean;
-        paymentConfirmation: boolean;
-        shippingConfirmation: boolean;
-    };
+interface AdminProfile {
+  id: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  role: string;
+  createdAt: string;
+  lastLogin?: string;
 }
 
-const Settings: React.FC = () => {
-    const [settings, setSettings] = useState<StoreSettings | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('general');
-    const [isSaving, setIsSaving] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
+const AdminSettings: React.FC = () => {
+  const { token, user } = useContext(UserContext) || {};
+  const [profile, setProfile] = useState<AdminProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phoneNumber: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  
+  // Validation state
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    phoneNumber: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
+  useEffect(() => {
+    fetchAdminProfile();
+  }, []);
 
-                // Mock settings data
-                const mockSettings: StoreSettings = {
-                    general: {
-                        storeName: 'PrinterShop Kenya',
-                        storeEmail: 'info@printershop.co.ke',
-                        storePhone: '+254 712 345678',
-                        storeAddress: '123 Business Street, Nairobi, Kenya',
-                        storeLogo: '/assets/logo.png',
-                        currencySymbol: 'KES',
-                        timeZone: 'Africa/Nairobi'
-                    },
-                    payment: {
-                        acceptedMethods: ['Credit Card', 'PayPal', 'Bank Transfer', 'Mobile Money'],
-                        paypalEmail: 'payments@printershop.co.ke',
-                        bankDetails: 'Bank: Kenya Commercial Bank\nAccount: 1234567890\nBranch: Main Branch',
-                        mobileMoney: {
-                            enabled: true,
-                            providers: ['M-Pesa', 'Airtel Money']
-                        }
-                    },
-                    shipping: {
-                        methods: [
-                            {
-                                id: 'standard',
-                                name: 'Standard Shipping',
-                                cost: 500,
-                                enabled: true
-                            },
-                            {
-                                id: 'express',
-                                name: 'Express Shipping',
-                                cost: 1000,
-                                enabled: true
-                            },
-                            {
-                                id: 'pickup',
-                                name: 'Store Pickup',
-                                cost: 0,
-                                enabled: true
-                            }
-                        ],
-                        freeShippingThreshold: 10000
-                    },
-                    email: {
-                        fromName: 'PrinterShop Support',
-                        fromEmail: 'support@printershop.co.ke',
-                        emailTemplate: 'default',
-                        orderConfirmation: true,
-                        paymentConfirmation: true,
-                        shippingConfirmation: true
-                    }
-                };
-
-                setSettings(mockSettings);
-            } catch (error) {
-                console.error('Error fetching settings:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchSettings();
-    }, []);
-
-    const handleInputChange = (section: keyof StoreSettings, field: string, value: any) => {
-        if (!settings) return;
-
-        setSettings({
-            ...settings,
-            [section]: {
-                ...settings[section],
-                [field]: value
-            }
+  const fetchAdminProfile = async () => {
+    setIsLoading(true);
+    try {
+      // If we have user ID from context, use it, otherwise default to 3 from the example
+      const adminId = user?.id || 3;
+      
+      const response = await axios.get(`${API_BASE_URL}/admin/${adminId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.data) {
+        setProfile(response.data);
+        // Initialize form data
+        setFormData({
+          name: response.data.name || '',
+          email: response.data.email || '',
+          phoneNumber: response.data.phoneNumber || '',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
         });
-
-        setHasChanges(true);
-    };
-
-    const handleNestedInputChange = (section: keyof StoreSettings, parent: string, field: string, value: any) => {
-        if (!settings) return;
-
-        setSettings({
-            ...settings,
-            [section]: {
-                ...settings[section],
-                [parent]: {
-                    ...settings[section][parent as keyof typeof settings[typeof section]],
-                    [field]: value
-                }
-            }
-        });
-
-        setHasChanges(true);
-    };
-
-    const handleCheckboxChange = (section: keyof StoreSettings, field: string, checked: boolean) => {
-        if (!settings) return;
-
-        setSettings({
-            ...settings,
-            [section]: {
-                ...settings[section],
-                [field]: checked
-            }
-        });
-
-        setHasChanges(true);
-    };
-
-    const handleArrayChange = (section: keyof StoreSettings, field: string, value: string[]) => {
-        if (!settings) return;
-
-        setSettings({
-            ...settings,
-            [section]: {
-                ...settings[section],
-                [field]: value
-            }
-        });
-
-        setHasChanges(true);
-    };
-
-    const handleSaveSettings = async () => {
-        setIsSaving(true);
-
-        // Simulate API call to save settings
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        setIsSaving(false);
-        setHasChanges(false);
-
-        // Show success message
-        alert('Settings saved successfully!');
-    };
-
-    const renderGeneralSettings = () => {
-        if (!settings) return null;
-
-        return (
-            <div className="general-settings">
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Store Name</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={settings.general.storeName}
-                                onChange={(e) => handleInputChange('general', 'storeName', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Store Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                value={settings.general.storeEmail}
-                                onChange={(e) => handleInputChange('general', 'storeEmail', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Store Phone</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={settings.general.storePhone}
-                                onChange={(e) => handleInputChange('general', 'storePhone', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Currency Symbol</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={settings.general.currencySymbol}
-                                onChange={(e) => handleInputChange('general', 'currencySymbol', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-12 mb-4">
-                        <div className="form-group">
-                            <label>Store Address</label>
-                            <textarea
-                                className="form-control"
-                                rows={3}
-                                value={settings.general.storeAddress}
-                                onChange={(e) => handleInputChange('general', 'storeAddress', e.target.value)}
-                            ></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Time Zone</label>
-                            <select
-                                className="form-control"
-                                value={settings.general.timeZone}
-                                onChange={(e) => handleInputChange('general', 'timeZone', e.target.value)}
-                            >
-                                <option value="Africa/Nairobi">East Africa Time (EAT)</option>
-                                <option value="UTC">Coordinated Universal Time (UTC)</option>
-                                <option value="Europe/London">Greenwich Mean Time (GMT)</option>
-                                <option value="America/New_York">Eastern Time (ET)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Store Logo</label>
-                            <div className="custom-file">
-                                <input type="file" className="custom-file-input" id="storeLogo" />
-                                <label className="custom-file-label" htmlFor="storeLogo">Choose file</label>
-                            </div>
-                            <small className="form-text text-muted">Recommended size: 200x60 pixels</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderPaymentSettings = () => {
-        if (!settings) return null;
-
-        return (
-            <div className="payment-settings">
-                <div className="row">
-                    <div className="col-md-12 mb-4">
-                        <div className="form-group">
-                            <label>Accepted Payment Methods</label>
-                            <div className="payment-methods-container">
-                                <div className="custom-control custom-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="creditCard"
-                                        checked={settings.payment.acceptedMethods.includes('Credit Card')}
-                                        onChange={(e) => {
-                                            const methods = e.target.checked
-                                                ? [...settings.payment.acceptedMethods, 'Credit Card']
-                                                : settings.payment.acceptedMethods.filter(m => m !== 'Credit Card');
-                                            handleArrayChange('payment', 'acceptedMethods', methods);
-                                        }}
-                                    />
-                                    <label className="custom-control-label" htmlFor="creditCard">Credit Card</label>
-                                </div>
-
-                                <div className="custom-control custom-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="paypal"
-                                        checked={settings.payment.acceptedMethods.includes('PayPal')}
-                                        onChange={(e) => {
-                                            const methods = e.target.checked
-                                                ? [...settings.payment.acceptedMethods, 'PayPal']
-                                                : settings.payment.acceptedMethods.filter(m => m !== 'PayPal');
-                                            handleArrayChange('payment', 'acceptedMethods', methods);
-                                        }}
-                                    />
-                                    <label className="custom-control-label" htmlFor="paypal">PayPal</label>
-                                </div>
-
-                                <div className="custom-control custom-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="bankTransfer"
-                                        checked={settings.payment.acceptedMethods.includes('Bank Transfer')}
-                                        onChange={(e) => {
-                                            const methods = e.target.checked
-                                                ? [...settings.payment.acceptedMethods, 'Bank Transfer']
-                                                : settings.payment.acceptedMethods.filter(m => m !== 'Bank Transfer');
-                                            handleArrayChange('payment', 'acceptedMethods', methods);
-                                        }}
-                                    />
-                                    <label className="custom-control-label" htmlFor="bankTransfer">Bank Transfer</label>
-                                </div>
-
-                                <div className="custom-control custom-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="mobileMoney"
-                                        checked={settings.payment.acceptedMethods.includes('Mobile Money')}
-                                        onChange={(e) => {
-                                            const methods = e.target.checked
-                                                ? [...settings.payment.acceptedMethods, 'Mobile Money']
-                                                : settings.payment.acceptedMethods.filter(m => m !== 'Mobile Money');
-                                            handleArrayChange('payment', 'acceptedMethods', methods);
-                                        }}
-                                    />
-                                    <label className="custom-control-label" htmlFor="mobileMoney">Mobile Money</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>PayPal Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                value={settings.payment.paypalEmail}
-                                onChange={(e) => handleInputChange('payment', 'paypalEmail', e.target.value)}
-                                disabled={!settings.payment.acceptedMethods.includes('PayPal')}
-                            />
-                        </div>
-                    </div>
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Mobile Money</label>
-                            <div className="custom-control custom-switch mb-2">
-                                <input
-                                    type="checkbox"
-                                    className="custom-control-input"
-                                    id="enableMobileMoney"
-                                    checked={settings.payment.mobileMoney.enabled}
-                                    onChange={(e) => handleNestedInputChange('payment', 'mobileMoney', 'enabled', e.target.checked)}
-                                    disabled={!settings.payment.acceptedMethods.includes('Mobile Money')}
-                                />
-                                <label className="custom-control-label" htmlFor="enableMobileMoney">
-                                    Enable Mobile Money
-                                </label>
-                            </div>
-
-                            <div className="mobile-money-providers">
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Enter providers (comma separated)"
-                                    value={settings.payment.mobileMoney.providers.join(', ')}
-                                    onChange={(e) => {
-                                        const providers = e.target.value.split(',').map(p => p.trim()).filter(p => p);
-                                        handleNestedInputChange('payment', 'mobileMoney', 'providers', providers);
-                                    }}
-                                    disabled={!settings.payment.acceptedMethods.includes('Mobile Money') || !settings.payment.mobileMoney.enabled}
-                                />
-                                <small className="form-text text-muted">e.g. M-Pesa, Airtel Money</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-12 mb-4">
-                        <div className="form-group">
-                            <label>Bank Details</label>
-                            <textarea
-                                className="form-control"
-                                rows={4}
-                                value={settings.payment.bankDetails}
-                                onChange={(e) => handleInputChange('payment', 'bankDetails', e.target.value)}
-                                disabled={!settings.payment.acceptedMethods.includes('Bank Transfer')}
-                            ></textarea>
-                            <small className="form-text text-muted">Enter bank details for bank transfers</small>
-                        </div>
-                    </div>
-                </div>
-            </div >
-        );
-    };
-
-    const renderShippingSettings = () => {
-        if (!settings) return null;
-
-        return (
-            <div className="shipping-settings">
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Free Shipping Threshold</label>
-                            <div className="input-group">
-                                <div className="input-group-prepend">
-                                    <span className="input-group-text">{settings.general.currencySymbol}</span>
-                                </div>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    value={settings.shipping.freeShippingThreshold}
-                                    onChange={(e) => handleInputChange('shipping', 'freeShippingThreshold', parseFloat(e.target.value))}
-                                />
-                            </div>
-                            <small className="form-text text-muted">Set to 0 to disable free shipping</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-12 mb-4">
-                        <label>Shipping Methods</label>
-
-                        {settings.shipping.methods.map((method, index) => (
-                            <div key={method.id} className="card mb-3">
-                                <div className="card-body">
-                                    <div className="row">
-                                        <div className="col-md-4 mb-3 mb-md-0">
-                                            <div className="form-group mb-md-0">
-                                                <label>Method Name</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    value={method.name}
-                                                    onChange={(e) => {
-                                                        const updatedMethods = [...settings.shipping.methods];
-                                                        updatedMethods[index].name = e.target.value;
-                                                        handleInputChange('shipping', 'methods', updatedMethods);
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-md-3 mb-3 mb-md-0">
-                                            <div className="form-group mb-md-0">
-                                                <label>Cost</label>
-                                                <div className="input-group">
-                                                    <div className="input-group-prepend">
-                                                        <span className="input-group-text">{settings.general.currencySymbol}</span>
-                                                    </div>
-                                                    <input
-                                                        type="number"
-                                                        className="form-control"
-                                                        value={method.cost}
-                                                        onChange={(e) => {
-                                                            const updatedMethods = [...settings.shipping.methods];
-                                                            updatedMethods[index].cost = parseFloat(e.target.value);
-                                                            handleInputChange('shipping', 'methods', updatedMethods);
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-3 mb-3 mb-md-0">
-                                            <div className="form-group d-flex align-items-end h-100 mb-0">
-                                                <div className="custom-control custom-switch">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="custom-control-input"
-                                                        id={`enableShipping${index}`}
-                                                        checked={method.enabled}
-                                                        onChange={(e) => {
-                                                            const updatedMethods = [...settings.shipping.methods];
-                                                            updatedMethods[index].enabled = e.target.checked;
-                                                            handleInputChange('shipping', 'methods', updatedMethods);
-                                                        }}
-                                                    />
-                                                    <label className="custom-control-label" htmlFor={`enableShipping${index}`}>
-                                                        {method.enabled ? 'Enabled' : 'Disabled'}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-2">
-                                            <div className="form-group d-flex align-items-end h-100 mb-0">
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-outline-danger btn-sm btn-block"
-                                                    onClick={() => {
-                                                        const updatedMethods = settings.shipping.methods.filter((_, i) => i !== index);
-                                                        handleInputChange('shipping', 'methods', updatedMethods);
-                                                    }}
-                                                >
-                                                    <i className="material-icons">delete</i> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                        <button
-                            type="button"
-                            className="btn btn-outline-primary"
-                            onClick={() => {
-                                const newMethod = {
-                                    id: `method-${Date.now()}`,
-                                    name: 'New Shipping Method',
-                                    cost: 0,
-                                    enabled: true
-                                };
-                                handleInputChange('shipping', 'methods', [...settings.shipping.methods, newMethod]);
-                            }}
-                        >
-                            <i className="material-icons">add</i> Add Shipping Method
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderEmailSettings = () => {
-        if (!settings) return null;
-
-        return (
-            <div className="email-settings">
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>From Name</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={settings.email.fromName}
-                                onChange={(e) => handleInputChange('email', 'fromName', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>From Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                value={settings.email.fromEmail}
-                                onChange={(e) => handleInputChange('email', 'fromEmail', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6 mb-4">
-                        <div className="form-group">
-                            <label>Email Template</label>
-                            <select
-                                className="form-control"
-                                value={settings.email.emailTemplate}
-                                onChange={(e) => handleInputChange('email', 'emailTemplate', e.target.value)}
-                            >
-                                <option value="default">Default Template</option>
-                                <option value="minimal">Minimal Template</option>
-                                <option value="modern">Modern Template</option>
-                                <option value="branded">Branded Template</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-12 mb-4">
-                        <label>Email Notifications</label>
-                        <div className="card">
-                            <div className="card-body">
-                                <div className="custom-control custom-checkbox mb-3">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="orderConfirmation"
-                                        checked={settings.email.orderConfirmation}
-                                        onChange={(e) => handleCheckboxChange('email', 'orderConfirmation', e.target.checked)}
-                                    />
-                                    <label className="custom-control-label" htmlFor="orderConfirmation">
-                                        Order Confirmation
-                                    </label>
-                                    <small className="form-text text-muted">
-                                        Send an email when a new order is placed
-                                    </small>
-                                </div>
-
-                                <div className="custom-control custom-checkbox mb-3">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="paymentConfirmation"
-                                        checked={settings.email.paymentConfirmation}
-                                        onChange={(e) => handleCheckboxChange('email', 'paymentConfirmation', e.target.checked)}
-                                    />
-                                    <label className="custom-control-label" htmlFor="paymentConfirmation">
-                                        Payment Confirmation
-                                    </label>
-                                    <small className="form-text text-muted">
-                                        Send an email when a payment is received
-                                    </small>
-                                </div>
-
-                                <div className="custom-control custom-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        className="custom-control-input"
-                                        id="shippingConfirmation"
-                                        checked={settings.email.shippingConfirmation}
-                                        onChange={(e) => handleCheckboxChange('email', 'shippingConfirmation', e.target.checked)}
-                                    />
-                                    <label className="custom-control-label" htmlFor="shippingConfirmation">
-                                        Shipping Confirmation
-                                    </label>
-                                    <small className="form-text text-muted">
-                                        Send an email when an order is shipped
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-12 mb-4">
-                        <button type="button" className="btn btn-outline-primary">
-                            <i className="material-icons mr-1">send</i> Send Test Email
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    if (isLoading) {
-        return <LoadingSpinner />;
+      }
+    } catch (error) {
+      console.error('Error fetching admin profile:', error);
+      toast.error('Failed to load profile. Please try again.');
+      
+      // For demo purposes, set dummy data if API fails
+      const dummyProfile = {
+        id: 3,
+        name: "Admin User",
+        email: "admin@gmail.com",
+        phoneNumber: "0706526569",
+        role: "Super Admin",
+        createdAt: "2023-09-15T08:30:00",
+        lastLogin: "2023-10-30T14:22:15"
+      };
+      
+      setProfile(dummyProfile);
+      setFormData({
+        name: dummyProfile.name,
+        email: dummyProfile.email,
+        phoneNumber: dummyProfile.phoneNumber,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    return (
-        <div className="settings-container">
-            <PageHeader
-                title="Settings"
-                subtitle="Configure your store settings"
-                actions={
-                    <button
-                        className="btn btn-success"
-                        onClick={handleSaveSettings}
-                        disabled={isSaving || !hasChanges}
-                    >
-                        {isSaving ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <i className="material-icons mr-1">save</i> Save Changes
-                            </>
-                        )}
-                    </button>
-                }
-            />
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({
+      ...formData,
+      [field]: value
+    });
+    
+    // Clear the error for this field when user starts typing
+    if (errors[field as keyof typeof errors]) {
+      setErrors({
+        ...errors,
+        [field]: ''
+      });
+    }
+    
+    setHasChanges(true);
+  };
 
-            <div className="row">
-                <div className="col-12">
-                    <DashboardCard>
-                        <ul className="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
-                            <li className="nav-item">
-                                <a
-                                    className={`nav-link ${activeTab === 'general' ? 'active' : ''}`}
-                                    href="#"
-                                    onClick={() => setActiveTab('general')}
-                                >
-                                    <i className="material-icons mr-1">store</i> General
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a
-                                    className={`nav-link ${activeTab === 'payment' ? 'active' : ''}`}
-                                    href="#"
-                                    onClick={() => setActiveTab('payment')}
-                                >
-                                    <i className="material-icons mr-1">payments</i> Payment
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a
-                                    className={`nav-link ${activeTab === 'shipping' ? 'active' : ''}`}
-                                    href="#"
-                                    onClick={() => setActiveTab('shipping')}
-                                >
-                                    <i className="material-icons mr-1">local_shipping</i> Shipping
-                                </a>
-                            </li>
-                            <li className="nav-item">
-                                <a
-                                    className={`nav-link ${activeTab === 'email' ? 'active' : ''}`}
-                                    href="#"
-                                    onClick={() => setActiveTab('email')}
-                                >
-                                    <i className="material-icons mr-1">email</i> Email
-                                </a>
-                            </li>
-                        </ul>
+  const validateForm = () => {
+    const newErrors = {
+      name: '',
+      email: '',
+      phoneNumber: '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    };
+    
+    let isValid = true;
+    
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+      isValid = false;
+    }
+    
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+      isValid = false;
+    }
+    
+    // Phone validation
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Phone number is required';
+      isValid = false;
+    }
+    
+    // Password validation (only if password change is requested)
+    if (showPasswordFields) {
+      if (!formData.currentPassword) {
+        newErrors.currentPassword = 'Current password is required';
+        isValid = false;
+      }
+      
+      if (!formData.newPassword) {
+        newErrors.newPassword = 'New password is required';
+        isValid = false;
+      } else if (formData.newPassword.length < 6) {
+        newErrors.newPassword = 'Password must be at least 6 characters';
+        isValid = false;
+      }
+      
+      if (formData.newPassword !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+        isValid = false;
+      }
+    }
+    
+    setErrors(newErrors);
+    return isValid;
+  };
 
-                        <div className="tab-content">
-                            {activeTab === 'general' && renderGeneralSettings()}
-                            {activeTab === 'payment' && renderPaymentSettings()}
-                            {activeTab === 'shipping' && renderShippingSettings()}
-                            {activeTab === 'email' && renderEmailSettings()}
-                        </div>
+  const handleSaveProfile = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix the errors before saving');
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      const adminId = profile?.id || 3;
+      
+      // Prepare payload based on whether password is being updated
+      const payload = showPasswordFields ? {
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        password: formData.newPassword
+      } : {
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber
+      };
+      
+      const response = await axios.put(`${API_BASE_URL}/admin/${adminId}`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.data) {
+        toast.success('Profile updated successfully!');
+        setHasChanges(false);
+        
+        // Reset password fields
+        setFormData({
+          ...formData,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        
+        setShowPasswordFields(false);
+        
+        // Update profile with new data
+        setProfile({
+          ...profile!,
+          name: formData.name,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber
+        });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-                        <div className="mt-4 d-flex justify-content-end">
-                            <button
-                                className="btn btn-success"
-                                onClick={handleSaveSettings}
-                                disabled={isSaving || !hasChanges}
-                            >
-                                {isSaving ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="material-icons mr-1">save</i> Save Changes
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </DashboardCard>
-                </div>
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  return (
+    <div className="profile-container">
+      <PageHeader
+        title="Admin Profile"
+        subtitle="Manage your account information"
+        actions={
+          <button
+            className="btn btn-success"
+            onClick={handleSaveProfile}
+            disabled={isSaving || !hasChanges}
+          >
+            {isSaving ? (
+              <>
+                <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <FaSave className="mr-1" /> Save Changes
+              </>
+            )}
+          </button>
+        }
+      />
+
+      <div className="row">
+        <div className="col-lg-4 mb-4">
+          <DashboardCard title="Profile Summary">
+            <div className="text-center mb-4">
+              <div className="avatar-circle mx-auto mb-3">
+                {profile?.name ? profile.name.charAt(0).toUpperCase() : 'A'}
+              </div>
+              <h4>{profile?.name || 'Admin User'}</h4>
+              <span className="badge badge-primary">{profile?.role || 'Administrator'}</span>
             </div>
+            
+            <div className="profile-info">
+              <div className="profile-info-item">
+                <div className="info-label">Email</div>
+                <div className="info-value">
+                  <FaEnvelope className="mr-2" />
+                  {profile?.email || 'admin@example.com'}
+                </div>
+              </div>
+              
+              <div className="profile-info-item">
+                <div className="info-label">Phone</div>
+                <div className="info-value">
+                  <FaPhone className="mr-2" />
+                  {profile?.phoneNumber || 'Not set'}
+                </div>
+              </div>
+              
+              <div className="profile-info-item">
+                <div className="info-label">Account Created</div>
+                <div className="info-value">
+                  {formatDate(profile?.createdAt)}
+                </div>
+              </div>
+              
+              <div className="profile-info-item">
+                <div className="info-label">Last Login</div>
+                <div className="info-value">
+                  {formatDate(profile?.lastLogin)}
+                </div>
+              </div>
+            </div>
+          </DashboardCard>
         </div>
-    );
+        
+        <div className="col-lg-8">
+          <DashboardCard title="Edit Profile">
+            <form>
+              <div className="row">
+                <div className="col-md-6 mb-4">
+                  <div className="form-group">
+                    <label htmlFor="name">
+                      <FaUser className="mr-2" /> Full Name
+                    </label>
+                    <input
+                      type="text"
+                      className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                    />
+                    {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                  </div>
+                </div>
+                
+                <div className="col-md-6 mb-4">
+                  <div className="form-group">
+                    <label htmlFor="email">
+                      <FaEnvelope className="mr-2" /> Email Address
+                    </label>
+                    <input
+                      type="email"
+                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                      id="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                    />
+                    {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="row">
+                <div className="col-md-6 mb-4">
+                  <div className="form-group">
+                    <label htmlFor="phoneNumber">
+                      <FaPhone className="mr-2" /> Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                      id="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    />
+                    {errors.phoneNumber && <div className="invalid-feedback">{errors.phoneNumber}</div>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-4">
+                <div className="col-12">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowPasswordFields(!showPasswordFields)}
+                  >
+                    <FaLock className="mr-2" /> 
+                    {showPasswordFields ? 'Cancel Password Change' : 'Change Password'}
+                  </button>
+                </div>
+              </div>
+              
+              {showPasswordFields && (
+                <div className="password-change-section">
+                  <div className="row">
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label htmlFor="currentPassword">Current Password</label>
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className={`form-control ${errors.currentPassword ? 'is-invalid' : ''}`}
+                            id="currentPassword"
+                            value={formData.currentPassword}
+                            onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                          />
+                          <div className="input-group-append">
+                            <button 
+                              className="btn btn-outline-secondary" 
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                          </div>
+                        </div>
+                        {errors.currentPassword && <div className="invalid-feedback d-block">{errors.currentPassword}</div>}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="row">
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label htmlFor="newPassword">New Password</label>
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className={`form-control ${errors.newPassword ? 'is-invalid' : ''}`}
+                            id="newPassword"
+                            value={formData.newPassword}
+                            onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                          />
+                          <div className="input-group-append">
+                            <button 
+                              className="btn btn-outline-secondary" 
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                          </div>
+                        </div>
+                        {errors.newPassword && <div className="invalid-feedback d-block">{errors.newPassword}</div>}
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-6 mb-4">
+                      <div className="form-group">
+                        <label htmlFor="confirmPassword">Confirm New Password</label>
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                            id="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                          />
+                          <div className="input-group-append">
+                            <button 
+                              className="btn btn-outline-secondary" 
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                          </div>
+                        </div>
+                        {errors.confirmPassword && <div className="invalid-feedback d-block">{errors.confirmPassword}</div>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="row mt-4">
+                <div className="col-12">
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={handleSaveProfile}
+                    disabled={isSaving || !hasChanges}
+                  >
+                    {isSaving ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave className="mr-1" /> Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </DashboardCard>
+        </div>
+      </div>
+
+      {/* Add CSS for avatar and profile styling */}
+      <style jsx>{`
+        .avatar-circle {
+          width: 100px;
+          height: 100px;
+          background-color: #0275d8;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: white;
+          font-size: 36px;
+          font-weight: bold;
+        }
+
+        .profile-info {
+          margin-top: 20px;
+        }
+
+        .profile-info-item {
+          margin-bottom: 15px;
+          padding-bottom: 15px;
+          border-bottom: 1px solid #eee;
+        }
+
+        .profile-info-item:last-child {
+          border-bottom: none;
+        }
+
+        .info-label {
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 5px;
+        }
+
+        .info-value {
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+        }
+
+        .password-change-section {
+          background-color: #f8f9fa;
+          padding: 20px;
+          border-radius: 5px;
+          margin-bottom: 20px;
+        }
+      `}</style>
+    </div>
+  );
 };
 
-export default Settings;
+export default AdminSettings;

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Transaction } from '../Services/TransactionService';
-import '../../../styles/Admin/RefundRequestModal.css';
+import { Transaction } from '../Services/PaymentService';
 
 interface RefundRequestModalProps {
   transaction: Transaction;
@@ -12,125 +11,92 @@ interface RefundRequestModalProps {
 const RefundRequestModal: React.FC<RefundRequestModalProps> = ({ 
   transaction, 
   onSubmit, 
-  onCancel,
-  isSubmitting
+  onCancel, 
+  isSubmitting 
 }) => {
   const [reason, setReason] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!reason.trim()) {
-      setError('Please provide a reason for the refund');
+      setError('Please provide a reason for the refund request');
       return;
     }
     
     onSubmit(reason);
   };
 
-  const formatAmount = (amount: number) => {
-    return `KES ${amount.toLocaleString()}`;
-  };
-
   return (
-    <div className="modal-overlay">
-      <div className="modal-dialog" role="document">
+    <div className="modal fade show" style={{ display: 'block' }}>
+      <div className="modal-dialog">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Request Refund</h5>
-            <button type="button" className="close" onClick={onCancel} disabled={isSubmitting}>
-              <span aria-hidden="true">&times;</span>
+            <button 
+              type="button" 
+              className="close" 
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              <span>&times;</span>
             </button>
           </div>
           
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
-              <div className="alert alert-info">
-                <div className="d-flex">
-                  <i className="material-icons mr-2">info</i>
-                  <div>
-                    You are requesting a refund for transaction #{transaction.id} of 
-                    <strong> {formatAmount(transaction.amount)}</strong>.
-                  </div>
+              <div className="refund-details mb-4">
+                <h6>Transaction Details</h6>
+                <div className="row mb-2">
+                  <div className="col-5">Reference:</div>
+                  <div className="col-7"><strong>{transaction.reference}</strong></div>
                 </div>
-              </div>
-              
-              <div className="transaction-summary mb-4">
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="info-item">
-                      <label>Customer:</label>
-                      <div>{transaction.user.name}</div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="info-item">
-                      <label>Reference:</label>
-                      <div>{transaction.reference}</div>
-                    </div>
-                  </div>
+                <div className="row mb-2">
+                  <div className="col-5">Amount:</div>
+                  <div className="col-7"><strong>KES {transaction.amount.toLocaleString()}</strong></div>
                 </div>
-                <div className="row mt-2">
-                  <div className="col-md-6">
-                    <div className="info-item">
-                      <label>Date:</label>
-                      <div>{new Date(transaction.createdAt).toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="info-item">
-                      <label>Method:</label>
-                      <div>{transaction.paymentMethod}</div>
-                    </div>
-                  </div>
+                <div className="row mb-2">
+                  <div className="col-5">Payment Method:</div>
+                  <div className="col-7"><strong>{transaction.paymentMethod}</strong></div>
                 </div>
+                <div className="row mb-2">
+                  <div className="col-5">Customer:</div>
+                  <div className="col-7"><strong>{transaction.user.name}</strong></div>
+                </div>
+                {transaction.mpesaReceiptId && (
+                  <div className="row mb-2">
+                    <div className="col-5">M-Pesa Receipt:</div>
+                    <div className="col-7"><strong>{transaction.mpesaReceiptId}</strong></div>
+                  </div>
+                )}
                 {transaction.order && (
-                  <div className="row mt-2">
-                    <div className="col-md-6">
-                      <div className="info-item">
-                        <label>Order ID:</label>
-                        <div>{transaction.order.id}</div>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="info-item">
-                        <label>Order Number:</label>
-                        <div>{transaction.order.orderNumber}</div>
-                      </div>
-                    </div>
+                  <div className="row mb-2">
+                    <div className="col-5">Order Number:</div>
+                    <div className="col-7"><strong>{transaction.order.orderNumber}</strong></div>
                   </div>
                 )}
               </div>
               
-              <div className="form-group">
-                <label htmlFor="refundReason">Reason for Refund <span className="text-danger">*</span></label>
-                <textarea
-                  className={`form-control ${error ? 'is-invalid' : ''}`}
-                  id="refundReason"
-                  rows={4}
-                  placeholder="Please explain why this transaction needs to be refunded..."
-                  value={reason}
-                  onChange={(e) => {
-                    setReason(e.target.value);
-                    if (e.target.value.trim()) {
-                      setError('');
-                    }
-                  }}
-                  disabled={isSubmitting}
-                  required
-                ></textarea>
-                {error && <div className="invalid-feedback">{error}</div>}
-              </div>
+              {error && (
+                <div className="alert alert-danger">{error}</div>
+              )}
               
-              <div className="alert alert-warning mt-3">
-                <div className="d-flex">
-                  <i className="material-icons mr-2">warning</i>
-                  <div>
-                    <strong>Important:</strong> Refunds may take 3-7 business days to process 
-                    depending on the payment method and bank processing times.
-                  </div>
-                </div>
+              <div className="form-group">
+                <label htmlFor="refundReason">Reason for Refund</label>
+                <textarea
+                  id="refundReason"
+                  className="form-control"
+                  rows={4}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  required
+                  placeholder="Please provide a detailed reason for the refund..."
+                  disabled={isSubmitting}
+                />
+                <small className="form-text text-muted">
+                  This information will be used for record keeping and may be shared with the customer.
+                </small>
               </div>
             </div>
             
@@ -145,7 +111,7 @@ const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
               </button>
               <button 
                 type="submit" 
-                className="btn btn-primary" 
+                className="btn btn-primary"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -153,14 +119,13 @@ const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                     <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
                     Processing...
                   </>
-                ) : (
-                  'Submit Refund Request'
-                )}
+                ) : 'Submit Refund Request'}
               </button>
             </div>
           </form>
         </div>
       </div>
+      <div className="modal-backdrop fade show"></div>
     </div>
   );
 };
