@@ -20,7 +20,7 @@ const Sidebar: React.FC = () => {
     { name: 'Customers', path: '/printers/customers', icon: <i className="bi bi-person" /> },
     { name: 'Payments', path: '/printers/payments', icon: <i className="bi bi-credit-card" /> },
     { name: 'Reports', path: '/printers/reports', icon: <i className="bi bi-bar-chart" /> },
-    { name: 'Settings', path: '/printers/settings', icon: <i className="bi bi-gear" /> },
+    { name: 'Profile', path: '/printers/settings', icon: <i className="bi bi-gear" /> },
   ];
 
   return (

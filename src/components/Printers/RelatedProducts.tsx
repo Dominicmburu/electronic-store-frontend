@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import styles from '../../styles/RelatedProducts.module.css';
 import axios from 'axios';
 import { API_BASE_URL } from '../../api/main';
+import '../../styles/RelatedProducts.css'; 
 
 interface RelatedProduct {
   id: number;
@@ -12,6 +12,7 @@ interface RelatedProduct {
   currentPrice: number;
   discount: string;
   category: string;
+  images: string[];
 }
 
 interface RelatedProductsProps {
@@ -22,6 +23,9 @@ interface RelatedProductsProps {
 const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, currentCategory }) => {
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [loading, setLoading] = useState(true);
+
+  console.log(relatedProducts);
+  
 
   useEffect(() => {
     const fetchRelatedProducts = async () => {
@@ -48,7 +52,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, cur
 
         const formattedProducts = combined.map(p => ({
           ...p,
-          image: `${API_BASE_URL}/uploads/${p.images}`,
+          image: p.images && p.images.length > 0 ? `${API_BASE_URL}/uploads/${p.images[0]}` : '',
           discount: p.lastPrice && p.currentPrice 
             ? `${Math.round(((p.lastPrice - p.currentPrice) / p.lastPrice) * 100)}%`
             : '0%'
@@ -56,7 +60,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, cur
 
         setRelatedProducts(formattedProducts);
       } catch (error) {
-        console.error('Error fetching related products:', error);
+        // console.error('Error fetching related products:', error);
       } finally {
         setLoading(false);
       }
@@ -65,33 +69,57 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProductId, cur
     fetchRelatedProducts();
   }, [currentProductId, currentCategory]);
 
-  if (loading) return <div>Loading related products...</div>;
+  if (loading) {
+    return (
+      <div className="related-products-loading">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading related products...</p>
+      </div>
+    );
+  }
+  
   if (!relatedProducts.length) return null;
 
   return (
-    <div className={`related-products mt-5 ${styles.relatedProducts}`}>
-      <h4>Related Products</h4>
-      <div className="row">
+    <div className="related-products-container">
+      <h4 className="related-products-title">Related Products</h4>
+      <div className="related-products-grid">
         {relatedProducts.map((product) => (
-          <div key={product.id} className="col-12 col-md-6 mb-4">
-            <div className={`product-card col-md-6 ${styles.productCard}`}>
-              <span className={`badge bg-success ${styles.badgeDiscount}`}>
-                {product.discount}
-              </span>
-              <Link to={`/product-details/${product.id}`} className="text-decoration-none text-dark">
-                <img src={product.image} alt={product.name} className="mb-3" />
-                <h5>{product.name}</h5>
-                <h5>{product.image}</h5>
-                <p className="price">
-                  {product.lastPrice > 0 && (
-                    <span className="old-price me-2">
+          <div key={product.id} className="product-card">
+            <Link to={`/product-details/${product.id}`} className="product-link">
+              <div className="product-image-container">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="product-image"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = 'https://via.placeholder.com/150';
+                  }} 
+                />
+                {Number(product.discount.replace('%', '')) > 0 && (
+                  <span className="discount-badge">
+                    {product.discount} OFF
+                  </span>
+                )}
+              </div>
+              <div className="product-details">
+                <h5 className="product-name">{product.name}</h5>
+                <div className="product-price">
+                  {product.lastPrice > 0 && product.lastPrice !== product.currentPrice && (
+                    <span className="old-price-related">
                       KSh {product.lastPrice.toLocaleString()}.00
                     </span>
                   )}
-                  KSh {product.currentPrice.toLocaleString()}.00
-                </p>
-              </Link>
-            </div>
+                  <span className="current-price-related">
+                    KSh {product.currentPrice.toLocaleString()}.00
+                  </span>
+                </div>
+              </div>
+            </Link>
           </div>
         ))}
       </div>

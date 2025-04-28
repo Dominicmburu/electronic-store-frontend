@@ -136,7 +136,7 @@ const Wallet: React.FC = () => {
   const handleWithdraw = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (!withdrawAmount || parseFloat(withdrawAmount) < 10) {
+    if (!withdrawAmount || parseFloat(withdrawAmount) < 1) {
       toast.error("Please enter an amount of at least 10");
       return;
     }

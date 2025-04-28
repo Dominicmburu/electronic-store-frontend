@@ -1,10 +1,12 @@
 // pages/customers/Customers.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
 import '../styles/Admin/Customers.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FaPlus, FaSearch, FaEye, FaEdit, FaCheck, FaBan, FaTrash, FaUser } from 'react-icons/fa';
+import { API_BASE_URL } from '../api/main';
+import { UserContext } from '../contexts/UserContext';
 
 interface User {
   id: number;
@@ -22,6 +24,7 @@ interface UserResponse {
 }
 
 const Customers: React.FC = () => {
+  const { token } = useContext(UserContext) || {};
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,16 +48,18 @@ const Customers: React.FC = () => {
   });
 
   // API base URL
-  const API_BASE_URL = 'http://127.0.0.1:5000/api';
-
   useEffect(() => {
     fetchUsers(currentPage);
-  }, [currentPage, currentStatus]);
+  }, [currentPage, currentStatus, token]);
 
   const fetchUsers = async (page: number) => {
     setIsLoading(true);
     try {
-      const response = await axios.get<UserResponse>(`${API_BASE_URL}/admin/users?page=${page}`);
+      const response = await axios.get<UserResponse>(`${API_BASE_URL}/admin/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setUsers(response.data.users);
       setTotalPages(response.data.totalPages);
     } catch (error) {
@@ -67,7 +72,11 @@ const Customers: React.FC = () => {
 
   const fetchUserDetails = async (userId: number) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/users/${userId}`);
+      const response = await axios.get(`${API_BASE_URL}/admin/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setSelectedUser(response.data);
       setShowDetailModal(true);
     } catch (error) {
@@ -80,6 +89,10 @@ const Customers: React.FC = () => {
     try {
       await axios.patch(`${API_BASE_URL}/admin/users/${userId}/active`, {
         isActive: !isActive
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       
       // Update local state
@@ -96,7 +109,11 @@ const Customers: React.FC = () => {
 
   const handleDeactivateUser = async (userId: number) => {
     try {
-      await axios.delete(`${API_BASE_URL}/admin/users/${userId}`);
+      await axios.delete(`${API_BASE_URL}/admin/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       
       // Update local state
       setUsers(users.map(user => 
@@ -123,11 +140,19 @@ const Customers: React.FC = () => {
           email: formData.email,
           phoneNumber: formData.phoneNumber,
           password: formData.password || undefined // Only send password if provided
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         toast.success('User updated successfully!');
       } else {
         // Create new user/admin
-        await axios.post(`${API_BASE_URL}/admin/register`, formData);
+        await axios.post(`${API_BASE_URL}/admin/register`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         toast.success('User created successfully!');
       }
       

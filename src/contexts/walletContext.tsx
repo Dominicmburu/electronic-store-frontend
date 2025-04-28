@@ -138,9 +138,25 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       });
   
       // Extract transaction status
-      const transaction = response.data.data.transaction;
+      const data = response.data?.data;
+
+      let transaction: Transaction;
+      
+      if(data?.transaction) {
+        transaction = data.transaction;
+      }
+      else if(data?.transactionId && data?.status) {
+        transaction = {
+          id: data.transactionId,
+          status: data.status,
+          ...data,
+        } as Transaction;
+      } else {
+        throw new Error('Transaction data is not available');
+      }
+
       const { status } = transaction;
-  
+      
       // Handle different transaction statuses
       if (status === 'COMPLETED') {
         toast.success('Transaction completed successfully');

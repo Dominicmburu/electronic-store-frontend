@@ -3,6 +3,7 @@ import { Table, Button } from 'react-bootstrap';
 import { UserContext } from '../../contexts/UserContext';
 import { toast } from 'react-toastify';
 import { fetchWishlistAPI } from '../../contexts/wishlistHelper';
+import { API_BASE_URL } from '../../api/main';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
@@ -52,7 +53,7 @@ const Wishlist = () => {
             wishlistItems.map((item: any) => (
               <tr key={item.productId}>
                 <td>
-                  <img src={ `assets/${item.product.images[0]}`} alt={item.product.name} style={{ width: '60px' }} />
+                  <img src={ `${API_BASE_URL}/uploads/${item.product.images[0]}`} alt={item.product.name} style={{ width: '60px' }} />
                 </td>
                 <td>{item.product.name}</td>
                 <td>KSh {item.product.currentPrice}</td>

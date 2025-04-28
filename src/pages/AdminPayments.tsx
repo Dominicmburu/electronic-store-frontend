@@ -2,18 +2,19 @@ import React, { useState, useEffect, useContext } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
 import TransactionService, { Transaction, TransactionStats } from '../components/Admin/Services/PaymentService';
 import TransactionViewModal from '../components/Admin/common/TransactionViewModal';
+import RefundRequestModal from '../components/Admin/common/RefundRequestModal';
 import { UserContext } from '../contexts/UserContext';
 import '../styles/Admin/Payments.css';
+import { FaSearch, FaDownload, FaMoneyBill, FaCheckCircle, FaHourglassHalf, FaExclamationCircle } from 'react-icons/fa';
 
 const Payments: React.FC = () => {
   const { token } = useContext(UserContext) || {};
-  
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentStatus, setCurrentStatus] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days' | 'custom'>('all');
   const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
   const [showCustomDate, setShowCustomDate] = useState(false);
@@ -24,7 +25,7 @@ const Payments: React.FC = () => {
     failed: 0,
     refunded: 0
   });
-  
+
   // Modal states
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [refundModalOpen, setRefundModalOpen] = useState(false);
@@ -32,7 +33,7 @@ const Payments: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  
+
   const transactionsPerPage = 10;
 
   useEffect(() => {
@@ -44,14 +45,13 @@ const Payments: React.FC = () => {
   const fetchTransactions = async () => {
     try {
       setIsLoading(true);
-      const response = await TransactionService.getTransactions(currentPage, transactionsPerPage);
+      const response = await TransactionService.getAllTransactions(currentPage, transactionsPerPage, token as string);
       setTransactions(response.transactions);
-      setTotalPages(response.pagination.pages);
-      
+
       // Calculate stats from all transactions
       const calculatedStats = TransactionService.calculateStats(response.transactions);
       setStats(calculatedStats);
-      
+
       setErrorMessage(null);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -71,12 +71,12 @@ const Payments: React.FC = () => {
       setErrorMessage('Only completed transactions can be refunded.');
       return;
     }
-    
+
     setCurrentTransaction(transaction);
     setRefundModalOpen(true);
   };
 
-  const handleStatusUpdate = async (transaction: Transaction, newStatus: string) => {
+  const handleStatusUpdate = async (transaction: Transaction, newStatus: 'COMPLETED' | 'PENDING' | 'FAILED' | 'REFUNDED') => {
     if (!token) {
       setErrorMessage('You must be logged in to update transaction status');
       return;
@@ -89,21 +89,23 @@ const Payments: React.FC = () => {
         newStatus,
         token
       );
-      
+
       // Update transactions list
-      setTransactions(transactions.map(t => 
-        t.id === updatedTransaction.id ? updatedTransaction : t
-      ));
-      
+      setTransactions(prevTransactions =>
+        prevTransactions.map(t =>
+          t.id === updatedTransaction.id ? updatedTransaction : t
+        )
+      );
+
       // Recalculate stats
       const updatedStats = TransactionService.calculateStats([
         ...transactions.filter(t => t.id !== updatedTransaction.id),
         updatedTransaction
       ]);
       setStats(updatedStats);
-      
+
       setSuccessMessage(`Transaction status updated to ${newStatus}`);
-      
+
       // Auto-dismiss success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
@@ -126,32 +128,34 @@ const Payments: React.FC = () => {
       setIsSubmitting(true);
       await TransactionService.requestRefund(
         {
-          orderId: currentTransaction.orderId?.toString() || '',
+          orderId: currentTransaction.order?.orderNumber || '',
           reason: reason
         },
         token
       );
-      
-      // Update transaction status locally
+
+      // Update transaction status locally - fix the type issue with explicit casting
       const updatedTransaction = {
         ...currentTransaction,
-        status: 'REFUNDED',
+        status: 'REFUNDED' as 'COMPLETED' | 'PENDING' | 'FAILED' | 'REFUNDED'
       };
-      
-      setTransactions(transactions.map(t => 
-        t.id === currentTransaction.id ? updatedTransaction : t
-      ));
-      
+
+      setTransactions(prevTransactions =>
+        prevTransactions.map(t =>
+          t.id === currentTransaction.id ? updatedTransaction : t
+        )
+      );
+
       // Recalculate stats
       const updatedStats = TransactionService.calculateStats([
-        ...transactions.filter(t => t.id !== updatedTransaction.id),
+        ...transactions.filter(t => t.id !== currentTransaction.id),
         updatedTransaction
       ]);
       setStats(updatedStats);
-      
+
       setRefundModalOpen(false);
       setSuccessMessage('Refund request submitted successfully');
-      
+
       // Auto-dismiss success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
@@ -182,7 +186,7 @@ const Payments: React.FC = () => {
   const handleDateFilterChange = (filter: 'all' | '7days' | '30days' | 'custom') => {
     setDateFilter(filter);
     setCurrentPage(1);
-    
+
     if (filter === 'custom') {
       setShowCustomDate(true);
     } else {
@@ -201,20 +205,20 @@ const Payments: React.FC = () => {
 
   const filteredTransactions = transactions.filter(transaction => {
     // Search filter
-    const matchesSearch = 
-      transaction.reference.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch =
+      transaction.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (transaction.order?.orderNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (transaction.mpesaReceiptId || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Status filter
     const matchesStatus = currentStatus === 'all' || transaction.status === currentStatus;
-    
+
     // Date filter
     let matchesDate = true;
     const transactionDate = new Date(transaction.createdAt);
     const today = new Date();
-    
+
     if (dateFilter === '7days') {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(today.getDate() - 7);
@@ -230,7 +234,7 @@ const Payments: React.FC = () => {
       endDate.setDate(endDate.getDate() + 1);
       matchesDate = transactionDate >= startDate && transactionDate < endDate;
     }
-    
+
     return matchesSearch && matchesStatus && matchesDate;
   });
 
@@ -246,24 +250,24 @@ const Payments: React.FC = () => {
     return <div className="alert alert-warning">You must be logged in to view transactions.</div>;
   }
 
-  if (isLoading) {
+  if (isLoading && transactions.length === 0) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="payments-container">
-      <PageHeader 
-        title="Payments" 
+      <PageHeader
+        title="Payments"
         subtitle="Track and manage all payment transactions"
         actions={
           <div className="d-flex">
             <button className="btn btn-primary">
-              <i className="material-icons mr-1">download</i> Export
+              <FaDownload className="mr-1" /> Export
             </button>
           </div>
         }
       />
-      
+
       {errorMessage && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           {errorMessage}
@@ -272,7 +276,7 @@ const Payments: React.FC = () => {
           </button>
         </div>
       )}
-      
+
       {successMessage && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
           {successMessage}
@@ -281,7 +285,7 @@ const Payments: React.FC = () => {
           </button>
         </div>
       )}
-      
+
       <div className="row mb-4">
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-primary shadow h-100 py-2">
@@ -296,13 +300,13 @@ const Payments: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-auto">
-                  <i className="material-icons text-gray-300" style={{ fontSize: '2rem' }}>payments</i>
+                  <FaMoneyBill className="text-gray-300" style={{ fontSize: '2rem' }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-success shadow h-100 py-2">
             <div className="card-body">
@@ -316,13 +320,13 @@ const Payments: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-auto">
-                  <i className="material-icons text-gray-300" style={{ fontSize: '2rem' }}>check_circle</i>
+                  <FaCheckCircle className="text-gray-300" style={{ fontSize: '2rem' }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-warning shadow h-100 py-2">
             <div className="card-body">
@@ -336,13 +340,13 @@ const Payments: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-auto">
-                  <i className="material-icons text-gray-300" style={{ fontSize: '2rem' }}>hourglass_empty</i>
+                  <FaHourglassHalf className="text-gray-300" style={{ fontSize: '2rem' }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-danger shadow h-100 py-2">
             <div className="card-body">
@@ -356,14 +360,14 @@ const Payments: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-auto">
-                  <i className="material-icons text-gray-300" style={{ fontSize: '2rem' }}>error</i>
+                  <FaExclamationCircle className="text-gray-300" style={{ fontSize: '2rem' }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <DashboardCard title='Payment Transactions' className="mb-4">
         <div className="payment-filters mb-4">
           <div className="row align-items-center">
@@ -380,16 +384,16 @@ const Payments: React.FC = () => {
                 />
                 <div className="input-group-append">
                   <button className="btn btn-primary" type="button">
-                    <i className="material-icons">search</i>
+                    <FaSearch />
                   </button>
                 </div>
               </div>
             </div>
-            
+
             <div className="col-lg-4 mb-3 mb-lg-0">
               <div className="d-flex align-items-center">
                 <label className="mr-2 mb-0">Date:</label>
-                <select 
+                <select
                   className="form-control form-control-sm"
                   value={dateFilter}
                   onChange={(e) => handleDateFilterChange(e.target.value as any)}
@@ -400,7 +404,7 @@ const Payments: React.FC = () => {
                   <option value="custom">Custom Range</option>
                 </select>
               </div>
-              
+
               {showCustomDate && (
                 <div className="custom-date-range mt-2">
                   <div className="d-flex">
@@ -432,35 +436,35 @@ const Payments: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="col-lg-4">
               <div className="d-flex justify-content-lg-end">
                 <div className="btn-group">
-                  <button 
+                  <button
                     className={`btn btn-sm ${currentStatus === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => setCurrentStatus('all')}
                   >
                     All
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${currentStatus === 'COMPLETED' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => setCurrentStatus('COMPLETED')}
                   >
                     Completed
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${currentStatus === 'PENDING' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => setCurrentStatus('PENDING')}
                   >
                     Pending
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${currentStatus === 'FAILED' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => setCurrentStatus('FAILED')}
                   >
                     Failed
                   </button>
-                  <button 
+                  <button
                     className={`btn btn-sm ${currentStatus === 'REFUNDED' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => setCurrentStatus('REFUNDED')}
                   >
@@ -474,7 +478,7 @@ const Payments: React.FC = () => {
 
         {currentTransactions.length === 0 ? (
           <div className="text-center py-5">
-            <i className="material-icons empty-icon">payments</i>
+            <FaMoneyBill className="empty-icon text-muted" size={64} />
             <h4>No payments found</h4>
             <p>Try adjusting your search or filter to find what you're looking for.</p>
           </div>
@@ -519,29 +523,31 @@ const Payments: React.FC = () => {
                       </td>
                       <td>
                         <div className="btn-group">
-                          <button 
+                          <button
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => handleViewTransaction(transaction)}
                             title="View details"
                           >
-                            <i className="material-icons">visibility</i>
+                            <FaSearch className="fa-fw" />
                           </button>
                           {transaction.status === 'PENDING' && (
-                            <button 
-                              className="btn btn-sm btn-outline-success" 
+                            <button
+                              className="btn btn-sm btn-outline-success"
                               onClick={() => handleStatusUpdate(transaction, 'COMPLETED')}
                               title="Mark as completed"
+                              disabled={isSubmitting}
                             >
-                              <i className="material-icons">check_circle</i>
+                              <FaCheckCircle className="fa-fw" />
                             </button>
                           )}
                           {transaction.status === 'COMPLETED' && (
-                            <button 
-                              className="btn btn-sm btn-outline-info" 
+                            <button
+                              className="btn btn-sm btn-outline-info"
                               onClick={() => handleRefundRequest(transaction)}
                               title="Request refund"
+                              disabled={isSubmitting}
                             >
-                              <i className="material-icons">reply</i>
+                              <FaMoneyBill className="fa-fw" />
                             </button>
                           )}
                         </div>
@@ -554,11 +560,11 @@ const Payments: React.FC = () => {
 
             <div className="d-flex justify-content-between align-items-center mt-4">
               <div>
-                Showing {transactions.length > 0 ? indexOfFirstTransaction + 1 : 0} to {Math.min(indexOfLastTransaction, filteredTransactions.length)} of {filteredTransactions.length} transactions
+                Showing {filteredTransactions.length > 0 ? indexOfFirstTransaction + 1 : 0} to {Math.min(indexOfLastTransaction, filteredTransactions.length)} of {filteredTransactions.length} transactions
               </div>
               <ul className="pagination">
                 <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button 
+                  <button
                     className="page-link"
                     onClick={() => paginate(currentPage - 1)}
                     disabled={currentPage === 1}
@@ -567,14 +573,14 @@ const Payments: React.FC = () => {
                   </button>
                 </li>
                 {Array.from({ length: Math.min(5, filteredTotalPages) }, (_, i) => {
-                  const pageNum = currentPage > 3 ? 
-                    (currentPage + i > filteredTotalPages ? filteredTotalPages - 4 + i : currentPage - 2 + i) : 
+                  const pageNum = currentPage > 3 ?
+                    (currentPage + i > filteredTotalPages ? filteredTotalPages - 4 + i : currentPage - 2 + i) :
                     i + 1;
-                  
+
                   if (pageNum <= filteredTotalPages && pageNum > 0) {
                     return (
                       <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                        <button 
+                        <button
                           className="page-link"
                           onClick={() => paginate(pageNum)}
                         >
@@ -586,7 +592,7 @@ const Payments: React.FC = () => {
                   return null;
                 })}
                 <li className={`page-item ${currentPage === filteredTotalPages ? 'disabled' : ''}`}>
-                  <button 
+                  <button
                     className="page-link"
                     onClick={() => paginate(currentPage + 1)}
                     disabled={currentPage === filteredTotalPages}
