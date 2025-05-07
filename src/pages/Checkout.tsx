@@ -36,7 +36,7 @@ const Checkout = () => {
   const location = useLocation();
   const { cart, loading: cartLoading, refreshCart } = useCart();
   const { orders, placeOrder, loading: orderLoading, payOrderWithMpesa, getUserOrders } = useOrder();
-  const { wallet, loading: walletLoading, payWithWallet, refreshWallet } = useWallet();
+  const { wallet, loading: walletLoading, refreshWallet } = useWallet();
   const userContext = useContext(UserContext);
   const token = userContext?.token;
   const profile = userContext?.profile;
@@ -52,8 +52,8 @@ const Checkout = () => {
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [availableAddresses, setAvailableAddresses] = useState<ShippingAddress[]>([]);
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
-  const [setOrderPlaced] = useState<boolean>(false);
-  const [setOrderSuccess] = useState<boolean>(false);
+  // const [orderPlaced, setOrderPlaced] = useState<boolean>(false);
+  // const [orderSuccess, setOrderSuccess] = useState<boolean>(false);
   const [paymentStatus, setPaymentStatus] = useState<"processing" | "success" | "failed" | null>(null);
   const [paymentInProgress, setPaymentInProgress] = useState<boolean>(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -436,7 +436,7 @@ const Checkout = () => {
           setCheckingTransactionStatus(false);
 
           setTimeout(() => {
-            setOrderSuccess(true);
+            // setOrderSuccess(true);
             setCurrentStep(CheckoutStep.CONFIRMATION);
             setShowPaymentModal(false);
           }, 2000);
@@ -616,7 +616,7 @@ const Checkout = () => {
 
       if (orderResponse && orderResponse.id) {
         setSelectedOrderId(orderResponse.id);
-        setOrderPlaced(true);
+        // setOrderPlaced(true);
 
         // After placing the order, go to the payment step
         setCurrentStep(CheckoutStep.PAYMENT);
@@ -694,7 +694,7 @@ const Checkout = () => {
 
       // Use a single setTimeout to avoid multiple state updates
       setTimeout(() => {
-        setOrderSuccess(true);
+        // setOrderSuccess(true);
         setCurrentStep(CheckoutStep.CONFIRMATION);
         setShowPaymentModal(false);
 

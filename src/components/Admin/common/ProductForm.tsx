@@ -43,8 +43,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imageErrors, setImageErrors] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [setIsLoading] = useState(true);
-  const [setError] = useState<string | null>(null);
+  // const [setIsLoading] = useState(true);
+  // const [setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -83,9 +83,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
         const data = Array.isArray(response.data) ? response.data : response.data.categories || [];
         setCategories(data);
       } catch (err) {
-        setError('Could not load categories.');
+        // setError('Could not load categories.');
       } finally {
-        setIsLoading(false);
+        // setIsLoading(false);
       }
     };
 

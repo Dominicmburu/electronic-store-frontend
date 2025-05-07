@@ -102,65 +102,65 @@ const Reports: React.FC = () => {
     alert(`Exporting report in ${format.toUpperCase()} format...`);
   };
 
-  const renderSalesTimeSeriesChart = () => {
-    if (!reportData) return null;
+  // const renderSalesTimeSeriesChart = () => {
+  //   if (!reportData) return null;
   
-    const timeSeriesData = timeRange === 'daily' ? reportData.sales.daily : reportData.sales.monthly;
-    const labels = timeRange === 'daily' 
-      ? timeSeriesData.map(item => item.date.substring(5)) // MM-DD format
-      : timeSeriesData.map(item => item.month); // Use `month` for monthly data
+  //   const timeSeriesData = timeRange === 'daily' ? reportData.sales.daily : reportData.sales.monthly;
+  //   const labels = timeRange === 'daily' 
+  //     ? timeSeriesData.map(item => item.date.substring(5)) // MM-DD format
+  //     : timeSeriesData.map(item => item.month); // Use `month` for monthly data
   
-    const data = {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Sales (KES)',
-          data: timeSeriesData.map(item => item.sales),
-          borderColor: '#4e73df',
-          backgroundColor: chartType === 'line' ? 'rgba(78, 115, 223, 0.05)' : 'rgba(78, 115, 223, 0.6)',
-          pointBackgroundColor: '#4e73df',
-          pointBorderColor: '#fff',
-          pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#4e73df',
-          pointHoverBorderColor: '#fff',
-          pointHitRadius: 10,
-          pointBorderWidth: 2,
-          fill: chartType === 'line',
-          tension: 0.3
-        }
-      ]
-    };
+  //   const data = {
+  //     labels: labels,
+  //     datasets: [
+  //       {
+  //         label: 'Sales (KES)',
+  //         data: timeSeriesData.map(item => item.sales),
+  //         borderColor: '#4e73df',
+  //         backgroundColor: chartType === 'line' ? 'rgba(78, 115, 223, 0.05)' : 'rgba(78, 115, 223, 0.6)',
+  //         pointBackgroundColor: '#4e73df',
+  //         pointBorderColor: '#fff',
+  //         pointHoverRadius: 5,
+  //         pointHoverBackgroundColor: '#4e73df',
+  //         pointHoverBorderColor: '#fff',
+  //         pointHitRadius: 10,
+  //         pointBorderWidth: 2,
+  //         fill: chartType === 'line',
+  //         tension: 0.3
+  //       }
+  //     ]
+  //   };
   
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context: any) {
-              return `KES ${context.parsed.y.toLocaleString()}`;
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          ticks: {
-            callback: function(value: any) {
-              return `KES ${value.toLocaleString()}`;
-            }
-          }
-        }
-      }
-    };
+  //   const options = {
+  //     responsive: true,
+  //     maintainAspectRatio: false,
+  //     plugins: {
+  //       legend: {
+  //         display: false
+  //       },
+  //       tooltip: {
+  //         callbacks: {
+  //           label: function(context: any) {
+  //             return `KES ${context.parsed.y.toLocaleString()}`;
+  //           }
+  //         }
+  //       }
+  //     },
+  //     scales: {
+  //       y: {
+  //         ticks: {
+  //           callback: function(value: any) {
+  //             return `KES ${value.toLocaleString()}`;
+  //           }
+  //         }
+  //       }
+  //     }
+  //   };
   
-    return chartType === 'line' 
-      ? <Line data={data} options={options} height={300} /> 
-      : <Bar data={data} options={options} height={300} />;
-  };
+  //   return chartType === 'line' 
+  //     ? <Line data={data} options={options} height={300} /> 
+  //     : <Bar data={data} options={options} height={300} />;
+  // };
   
 
   const renderCategorySalesChart = () => {
@@ -528,7 +528,7 @@ const Reports: React.FC = () => {
             }
           >
             <div className="chart-container">
-              {renderSalesTimeSeriesChart()}
+              {/* {renderSalesTimeSeriesChart()} */}
             </div>
           </DashboardCard>
         </div>
