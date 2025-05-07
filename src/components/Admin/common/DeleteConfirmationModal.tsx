@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../../styles/Admin/DeleteConfirmationModal.css';
+import { FaExclamationTriangle, FaInfoCircle, FaTrashAlt } from 'react-icons/fa';
 
 interface DeleteConfirmationModalProps {
   onConfirm: () => void;
@@ -18,7 +19,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title text-danger">
-              <i className="material-icons mr-2 align-middle">warning</i>
+              <FaExclamationTriangle className="mr-2 align-middle" />
               Confirm Deletion
             </h5>
             <button type="button" className="close" onClick={onCancel}>
@@ -28,7 +29,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           <div className="modal-body">
             <p>Are you sure you want to delete this product? This action cannot be undone.</p>
             <div className="alert alert-warning">
-              <i className="material-icons mr-2 align-middle">info</i>
+              <FaInfoCircle className="mr-2 align-middle" />
               Deleting this product will remove it from your inventory and any associated order history.
             </div>
           </div>
@@ -54,7 +55,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
                 </>
               ) : (
                 <>
-                  <i className="material-icons mr-1">delete</i> Delete Product
+                  <FaTrashAlt className="mr-1" /> Delete Product
                 </>
               )}
             </button>

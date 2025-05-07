@@ -1,9 +1,12 @@
 // pages/categories/Categories.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
 import axios from 'axios';
 import { FaPlus, FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
 import '../styles/Admin/Categories.css';
+import { API_BASE_URL } from '../api/main';
+import { UserContext } from '../contexts/UserContext';
+import { toast } from 'react-toastify';
 
 interface PrinterType {
   id: number;
@@ -15,7 +18,6 @@ interface Category {
   id: number;
   name: string;
   description: string;
-  images: string[];
   printerTypeId: number;
   printerType?: PrinterType;
 }
@@ -27,6 +29,7 @@ interface PaginatedCategories {
 }
 
 const Categories: React.FC = () => {
+  const { token } = useContext(UserContext) || {};
   const [categories, setCategories] = useState<Category[]>([]);
   const [printerTypes, setPrinterTypes] = useState<PrinterType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,17 +41,14 @@ const Categories: React.FC = () => {
   const [limit] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
 
-  // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    images: [] as string[],
     printerTypeId: 0
   });
 
-  // API URLs
-  const API_BASE_URL = 'http://127.0.0.1:5000/api';
   const CATEGORIES_URL = `${API_BASE_URL}/categories`;
   const PRINTER_TYPES_URL = `${API_BASE_URL}/printer-types`;
 
@@ -69,7 +69,6 @@ const Categories: React.FC = () => {
   const fetchPrinterTypes = async () => {
     try {
       const response = await axios.get(`${PRINTER_TYPES_URL}`);
-      // Make sure the response is an array
       const printerTypesData = Array.isArray(response.data) ? response.data : 
                              (response.data.printerTypes || []);
       setPrinterTypes(printerTypesData);
@@ -82,7 +81,7 @@ const Categories: React.FC = () => {
   useEffect(() => {
     fetchCategories();
     fetchPrinterTypes();
-  }, [page]);
+  }, [page, token]);
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,7 +92,6 @@ const Categories: React.FC = () => {
     setFormData({
       name: '',
       description: '',
-      images: [],
       printerTypeId: printerTypes && printerTypes.length > 0 ? printerTypes[0].id : 0
     });
   };
@@ -116,7 +114,6 @@ const Categories: React.FC = () => {
     setFormData({
       name: category.name,
       description: category.description,
-      images: category.images || [],
       printerTypeId: category.printerTypeId
     });
     setEditingCategory(category);
@@ -126,36 +123,23 @@ const Categories: React.FC = () => {
   const handleDelete = async (categoryId: number) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        await axios.delete(`${CATEGORIES_URL}/${categoryId}`);
-        fetchCategories(); // Refresh the list after deletion
-      } catch (error) {
+        await axios.delete(`${CATEGORIES_URL}/${categoryId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        fetchCategories(); 
+        toast.success('Category deleted successfully!');
+      } catch (error: any) {
         console.error('Error deleting category:', error);
-        setError('Failed to delete category. Please try again.');
+        let errorMessage = 'Failed to delete category. Please try again.';
+        
+        // Check if error contains a message from the server
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        
+        setError(errorMessage);
       }
     }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // In a real application, you would upload the file to your server
-      // and then store the image URL or filename
-      // For this example, we'll just store the filename
-      const newImages = [...formData.images];
-      newImages.push(e.target.files[0].name);
-      setFormData({
-        ...formData,
-        images: newImages
-      });
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const newImages = [...formData.images];
-    newImages.splice(index, 1);
-    setFormData({
-      ...formData,
-      images: newImages
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,18 +149,28 @@ const Categories: React.FC = () => {
     
     try {
       if (editingCategory) {
-        // Update existing category
-        await axios.put(`${CATEGORIES_URL}/${editingCategory.id}`, formData);
+        await axios.put(`${CATEGORIES_URL}/${editingCategory.id}`, formData,
+          { headers: { Authorization: `Bearer ${token}` } }          
+        );
+        toast.success('Category updated successfully!');
       } else {
-        // Add new category
-        await axios.post(CATEGORIES_URL, formData);
+        await axios.post(CATEGORIES_URL, formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Category added successfully!');
       }
       
       setShowAddModal(false);
-      fetchCategories(); // Refresh the list after adding/updating
-    } catch (error) {
+      fetchCategories();
+    } catch (error: any) {
       console.error('Error saving category:', error);
-      setError('Failed to save category. Please check your inputs and try again.');
+      let errorMessage = 'Failed to save category. Please check your inputs and try again.';
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -251,7 +245,6 @@ const Categories: React.FC = () => {
                       <th>Name</th>
                       <th>Description</th>
                       <th>Printer Type</th>
-                      <th>Images</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -262,19 +255,6 @@ const Categories: React.FC = () => {
                         <td>{category.name}</td>
                         <td className="category-description">{category.description}</td>
                         <td>{category.printerType?.name || 'Unknown'}</td>
-                        <td>
-                          {category.images && category.images.length > 0 ? (
-                            <div className="image-thumbnails">
-                              {category.images.map((image, index) => (
-                                <div key={index} className="image-thumbnail">
-                                  {image}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted">No images</span>
-                          )}
-                        </td>
                         <td>
                           <div className="btn-group">
                             <button 
@@ -397,40 +377,6 @@ const Categories: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Images</label>
-                    <div className="custom-file mb-2">
-                      <input
-                        type="file"
-                        className="custom-file-input"
-                        id="categoryImage"
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                      />
-                      <label className="custom-file-label" htmlFor="categoryImage">
-                        Choose image...
-                      </label>
-                    </div>
-                    
-                    {/* Image Preview */}
-                    {formData.images.length > 0 && (
-                      <div className="image-previews mt-2">
-                        {formData.images.map((image, index) => (
-                          <div key={index} className="image-preview-item">
-                            <div className="image-name">{image}</div>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-danger"
-                              onClick={() => removeImage(index)}
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="modal-footer">

@@ -10,6 +10,8 @@ import { FaEdit, FaEye, FaPlus, FaTrash } from 'react-icons/fa';
 import { AiFillAppstore, AiOutlineUnorderedList } from 'react-icons/ai';
 import { MdDelete, MdEdit, MdStar, MdStarBorder, MdVisibility } from 'react-icons/md';
 import { UserContext } from '../contexts/UserContext';
+import { toast } from 'react-toastify';
+
 
 const Products: React.FC = () => {
   const { token } = useContext(UserContext) || {};
@@ -82,16 +84,40 @@ const Products: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (productToDelete === null) return;
-
+  
     try {
       setIsSubmitting(true);
       await ProductService.deleteProduct(productToDelete, token as string);
       setProducts(products.filter(product => product.id !== productToDelete));
       setShowDeleteModal(false);
       setProductToDelete(null);
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      setErrorMessage('Failed to delete product. Please try again.');
+      toast.success('Product deleted successfully!');
+    } catch (error: any) {
+      console.error('Delete Product Error:', error);
+      
+      // Handle different error scenarios with appropriate toast messages
+      if (error.response && error.response.data && error.response.data.message) {
+        const errorMessage = error.response.data.message;
+        
+        // Check for specific error messages and show appropriate toasts
+        if (errorMessage.includes('shopping carts')) {
+          toast.warning('This product is currently in shopping carts and cannot be deleted. Please consider marking it as out of stock.');
+        } else if (errorMessage.includes('completed orders')) {
+          toast.info('This product is associated with completed orders and cannot be deleted for record-keeping purposes. You can mark it as out of stock instead.');
+        } else if (errorMessage.includes('referenced') || errorMessage.includes('violates foreign key')) {
+          toast.error('This product is referenced by other data and cannot be deleted.');
+        } else {
+          // Generic error messages
+          toast.error(errorMessage);
+        }
+        
+        setErrorMessage(errorMessage);
+      } else {
+        // Default error message
+        const defaultMessage = 'Failed to delete product. Please try again.';
+        toast.error(defaultMessage);
+        setErrorMessage(defaultMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -118,58 +144,151 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleProductSubmit = async (productData: any) => {
+  // const handleProductSubmit = async (productData: any) => {
+  //   try {
+  //     setIsSubmitting(true);
+  //     let updatedProduct: Product;
+
+  //     const formData = new FormData();
+
+  //     // Basic product information
+  //     formData.append('name', productData.name.toString());
+  //     formData.append('description', productData.description.toString());
+  //     formData.append('lastPrice', productData.lastPrice.toString());
+  //     formData.append('currentPrice', productData.currentPrice.toString());
+  //     formData.append('stockQuantity', productData.stockQuantity.toString());
+  //     formData.append('categoryId', productData.categoryId.toString());
+  //     formData.append('isFeatured', productData.isFeatured.toString());
+
+  //     // Handle specifications properly
+  //     // The backend expects specifications as an object, but formData can't directly accept objects
+  //     // We can either stringify the entire object, or send it in a format that the backend can parse
+  //     // formData.append('specifications', JSON.stringify(productData.specifications || {}));
+  //     Object.entries(productData.specifications || {}).forEach(([key, value]) => {
+  //       formData.append(`specifications[${key}]`, String(value));
+  //     });
+  //     // Handle existing images - these should be sent as a string array that the backend can merge
+  //     // Don't try to create File objects from strings as this won't work
+  //     if (productData.images && productData.images.length > 0) {
+  //       productData.images.forEach((image: string) => {
+  //         const file = new File([image], image, { type: "image/jpeg" });
+  //         formData.append('images[]', file);
+  //       });
+  //     }
+
+  //     // Handle new uploaded image files properly
+  //     if (productData.newImages && productData.newImages.length > 0) {
+  //       productData.newImages.forEach((file: File) => {
+  //         // Use the field name 'images' as expected by multer in the backend
+  //         formData.append('images', file);
+  //       });
+  //     }
+
+  //     if (currentProduct) {
+  //       updatedProduct = await ProductService.updateProduct(currentProduct.id, formData, token as string);
+  //       setProducts(products.map(p =>
+  //         p.id === currentProduct.id ? { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) } : p
+  //       ));
+  //       toast.success('Product updated successfully!');
+  //     } else {
+  //       // Create new product
+  //       updatedProduct = await ProductService.createProduct(formData, token as string);
+  //       setProducts([
+  //         ...products,
+  //         { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) }
+  //       ]);
+  //       toast.success('Product created successfully!');
+  //     }
+
+  //     setShowProductForm(false);
+  //     setCurrentProduct(null);
+  //   } catch (error) {
+  //     console.error('Error saving product:', error);
+  //     setErrorMessage('Failed to save product. Please check your inputs and try again.');
+  //     toast.error('Error saving product. Please try again!');
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const handleProductSubmit = async (productData: FormData | any) => {
     try {
       setIsSubmitting(true);
       let updatedProduct: Product;
-
-      const formData = new FormData();
-
-      formData.append('name', productData.name.toString());
-      formData.append('description', productData.description.toString());
-      formData.append('lastPrice', productData.lastPrice);
-      formData.append('currentPrice', productData.currentPrice);
-      formData.append('stockQuantity', productData.stockQuantity);
-      formData.append('categoryId', productData.categoryId);
-      formData.append('isFeatured', productData.isFeatured);
-
-      // Append specifications to FormData (if present)
-      Object.entries(productData.specifications || {}).forEach(([key, value]) => {
-        formData.append(`specifications[${key}]`, value);
-      });
-
-      if (productData.images && productData.images.length > 0) {
-        productData.images.forEach((image: string) => {
-          formData.append('images[]', image);
-        });
-      }
-
-      if (productData.newImages && productData.newImages.length > 0) {
-        productData.newImages.forEach((file: File) => {
-          formData.append('images', file);  // Adding new image files
-        });
-      }
-
-      if (currentProduct) {
-        // Update existing product
-        updatedProduct = await ProductService.updateProduct(currentProduct.id, Object.fromEntries(formData.entries()), token as string);
-        setProducts(products.map(p =>
-          p.id === currentProduct.id ? { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) } : p
-        ));
+  
+      if (productData instanceof FormData) {
+        // If productData is already FormData, use it directly
+        if (currentProduct) {
+          updatedProduct = await ProductService.updateProduct(currentProduct.id, productData, token as string);
+          setProducts(products.map(p =>
+            p.id === currentProduct.id ? { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) } : p
+          ));
+          toast.success('Product updated successfully!');
+        } else {
+          // Create new product
+          updatedProduct = await ProductService.createProduct(productData, token as string);
+          setProducts([
+            ...products,
+            { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) }
+          ]);
+          toast.success('Product created successfully!');
+        }
       } else {
-        // Create new product
-        updatedProduct = await ProductService.createProduct(formData, token as string);
-        setProducts([
-          ...products,
-          { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) }
-        ]);
+        // If not FormData, create it here
+        const formData = new FormData();
+  
+        // Add basic product information
+        formData.append('name', productData.name.toString());
+        formData.append('description', productData.description.toString());
+        formData.append('lastPrice', productData.lastPrice.toString());
+        formData.append('currentPrice', productData.currentPrice.toString());
+        formData.append('stockQuantity', productData.stockQuantity.toString());
+        formData.append('categoryId', productData.categoryId.toString());
+        formData.append('isFeatured', productData.isFeatured.toString());
+  
+        // Handle specifications
+        formData.append('specifications', JSON.stringify(productData.specifications || {}));
+  
+        // Handle existing images
+        if (productData.images && productData.images.length > 0) {
+          formData.append('existingImages', JSON.stringify(productData.images));
+        }
+  
+        // Handle new images
+        if (productData.newImages && productData.newImages.length > 0) {
+          productData.newImages.forEach((file: File) => {
+            formData.append('images', file);
+          });
+        }
+  
+        if (currentProduct) {
+          updatedProduct = await ProductService.updateProduct(currentProduct.id, formData, token as string);
+          setProducts(products.map(p =>
+            p.id === currentProduct.id ? { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) } : p
+          ));
+          toast.success('Product updated successfully!');
+        } else {
+          // Create new product
+          updatedProduct = await ProductService.createProduct(formData, token as string);
+          setProducts([
+            ...products,
+            { ...updatedProduct, status: getStatus(updatedProduct.stockQuantity) }
+          ]);
+          toast.success('Product created successfully!');
+        }
       }
-
+  
       setShowProductForm(false);
       setCurrentProduct(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
-      setErrorMessage('Failed to save product. Please check your inputs and try again.');
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
+        toast.error(error.response.data.message);
+      } else {
+        setErrorMessage('Failed to save product. Please check your inputs and try again.');
+        toast.error('Error saving product. Please try again!');
+      }
     } finally {
       setIsSubmitting(false);
     }
