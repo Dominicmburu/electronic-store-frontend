@@ -16,7 +16,7 @@ const OrderHistory: React.FC = () => {
     const [refundReason, setRefundReason] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
-    const [setReviewOrderId] = useState<number | null>(null);
+    // const [setReviewOrderId] = useState<number | null>(null);
 
     useEffect(() => {
         getUserOrders();
@@ -199,7 +199,7 @@ const OrderHistory: React.FC = () => {
                                                     size="sm"
                                                     variant="outline-success"
                                                     onClick={() => {
-                                                        setReviewOrderId(order.id);
+                                                        // setReviewOrderId(order.id);
                                                         setShowReviewModal(true);
                                                     }}
                                                 >
