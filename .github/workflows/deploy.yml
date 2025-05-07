@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main
+      - connect
 name: 🚀 Deploy website on push
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
         run: npm install -g pnpm && pnpm install
 
       - name: Build Project
-        run: npm run build
+        run: pnpm run build
 
       - name: Deploy to FTP server
         # uses: sebastianpopp/ftp-action@releases/v2
