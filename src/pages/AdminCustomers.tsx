@@ -160,7 +160,7 @@ const Customers: React.FC = () => {
       }
 
       setShowUserModal(false);
-      fetchUsers(currentPage);
+      fetchUsers();
     } catch (error: any) {
       console.error('Error saving user:', error);
       const errorMessage = error.response?.data?.message || 'Failed to save user. Please check the form and try again.';

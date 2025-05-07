@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
 import 'chart.js/auto';
 import '../styles/Admin/Reports.css';
 
