@@ -28,7 +28,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ stores, mapRef }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(center);
 
   // Save map methods to the ref
-  const handleMapCreated = (map: any) => {
+  const handleMapCreated = () => {
     mapRef.current = {
       setView: (coords: [number, number], newZoom: number) => {
         setMapCenter(coords);
@@ -38,7 +38,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ stores, mapRef }) => {
   };
 
   useEffect(() => {
-    handleMapCreated(null);
+    handleMapCreated();
   }, []);
 
   return (

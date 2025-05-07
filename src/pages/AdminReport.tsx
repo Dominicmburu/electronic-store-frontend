@@ -104,12 +104,12 @@ const Reports: React.FC = () => {
 
   const renderSalesTimeSeriesChart = () => {
     if (!reportData) return null;
-    
+  
     const timeSeriesData = timeRange === 'daily' ? reportData.sales.daily : reportData.sales.monthly;
     const labels = timeRange === 'daily' 
       ? timeSeriesData.map(item => item.date.substring(5)) // MM-DD format
-      : timeSeriesData.map(item => item.month);
-    
+      : timeSeriesData.map(item => item.month); // Use `month` for monthly data
+  
     const data = {
       labels: labels,
       datasets: [
@@ -130,7 +130,7 @@ const Reports: React.FC = () => {
         }
       ]
     };
-
+  
     const options = {
       responsive: true,
       maintainAspectRatio: false,
@@ -156,11 +156,12 @@ const Reports: React.FC = () => {
         }
       }
     };
-
+  
     return chartType === 'line' 
       ? <Line data={data} options={options} height={300} /> 
       : <Bar data={data} options={options} height={300} />;
   };
+  
 
   const renderCategorySalesChart = () => {
     if (!reportData) return null;

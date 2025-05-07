@@ -14,7 +14,7 @@ const Cart: React.FC = () => {
   const { orders, getUserOrders, cancelOrder } = useOrder();
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [showPendingOrdersModal, setShowPendingOrdersModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedOrderId] = useState<number | null>(null);
   const [showCancelOrderModal, setShowCancelOrderModal] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<number | null>(null);
   const [cancellingOrder, setCancellingOrder] = useState(false);

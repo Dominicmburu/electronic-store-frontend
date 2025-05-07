@@ -1,13 +1,11 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button, Badge, Modal, Form } from 'react-bootstrap';
-import { UserContext } from '../../contexts/UserContext';
 import { useOrder, Order } from '../../contexts/orderContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
 const OrderHistory: React.FC = () => {
-    const { profile } = useContext(UserContext) || {};
     const { cancelOrder, requestRefund, getUserOrders, orders } = useOrder();
     const navigate = useNavigate();
 
@@ -18,7 +16,7 @@ const OrderHistory: React.FC = () => {
     const [refundReason, setRefundReason] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
-    const [reviewOrderId, setReviewOrderId] = useState<number | null>(null);
+    const [setReviewOrderId] = useState<number | null>(null);
 
     useEffect(() => {
         getUserOrders();

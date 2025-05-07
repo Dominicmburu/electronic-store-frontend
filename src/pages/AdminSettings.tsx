@@ -1,17 +1,17 @@
 // pages/admin/Profile.tsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
 import { UserContext } from '../contexts/UserContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../api/main';
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaSave, FaEye, FaEyeSlash, FaBan } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaSave, FaEye, FaEyeSlash } from 'react-icons/fa';
 import '../styles/Admin/Settings.css'
 
 const AdminSettings: React.FC = () => {
   const userContext = useContext(UserContext);
   const { token, profile } = userContext || {};
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);

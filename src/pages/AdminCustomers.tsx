@@ -4,7 +4,7 @@ import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/c
 import '../styles/Admin/Customers.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaPlus, FaSearch, FaEye, FaEdit, FaCheck, FaBan, FaTrash, FaUser, FaPhone, FaEnvelope } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEye, FaEdit, FaCheck, FaBan, FaUser, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { API_BASE_URL } from '../api/main';
 import { UserContext } from '../contexts/UserContext';
 
@@ -17,11 +17,11 @@ interface User {
   phoneNumber?: string;
 }
 
-interface UserResponse {
-  page: number;
-  totalPages: number;
-  users: User[];
-}
+// interface UserResponse {
+//   page: number;
+//   totalPages: number;
+//   users: User[];
+// }
 
 const Customers: React.FC = () => {
   const { token } = useContext(UserContext) || {};
@@ -47,10 +47,10 @@ const Customers: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchUsers(currentPage);
+    fetchUsers();
   }, [currentPage, currentStatus, token]);
 
-  const fetchUsers = async (page: number) => {
+  const fetchUsers = async () => {
     setIsLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/admin/users`, {

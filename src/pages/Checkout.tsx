@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { Modal, Button, Form, Col, Row, Card, Badge, Alert } from "react-bootstrap";
+import { Modal, Button, Form, Card, Badge } from "react-bootstrap";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../components/Layout";
 import { useCart } from "../contexts/cartContext";
@@ -52,8 +52,8 @@ const Checkout = () => {
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [availableAddresses, setAvailableAddresses] = useState<ShippingAddress[]>([]);
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
-  const [orderPlaced, setOrderPlaced] = useState<boolean>(false);
-  const [orderSuccess, setOrderSuccess] = useState<boolean>(false);
+  const [setOrderPlaced] = useState<boolean>(false);
+  const [setOrderSuccess] = useState<boolean>(false);
   const [paymentStatus, setPaymentStatus] = useState<"processing" | "success" | "failed" | null>(null);
   const [paymentInProgress, setPaymentInProgress] = useState<boolean>(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -688,7 +688,7 @@ const Checkout = () => {
       setShowPaymentModal(true);
 
       // Process wallet payment with the order ID
-      const paymentResult = await payWithWallet(selectedOrderId);
+      // const paymentResult = await payWithWallet(selectedOrderId);
 
       setPaymentStatus("success");
 
@@ -832,7 +832,7 @@ const Checkout = () => {
     }
   };
 
-  const goToPayment = () => setCurrentStep(CheckoutStep.PAYMENT);
+  // const goToPayment = () => setCurrentStep(CheckoutStep.PAYMENT);
 
   const goToReviewCart = () => {
     if (!isDirectPayment) {
@@ -840,7 +840,7 @@ const Checkout = () => {
     }
   };
 
-  const goToAccount = () => navigate("/my-account");
+  // const goToAccount = () => navigate("/my-account");
 
   // Animation variants
   const containerVariants = {
