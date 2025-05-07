@@ -20,7 +20,6 @@ const NavBar = () => {
 
   const cartItemCount = cart && cart.items ? cart.items.length : 0;  // Safely access cart items
 
-
   const handleCloseNavbar = () => {
     const navbarCollapse = document.getElementById("navbarNav");
     if (navbarCollapse && navbarCollapse.classList.contains("show")) {
@@ -38,20 +37,21 @@ const NavBar = () => {
     location.pathname === path ? "active" : "";
 
   // Build a className for the close button that shows/hides based on isNavbarOpen
-  const closeBtnClass = `${styles.closeBtn} ${isNavbarOpen ? styles.showCloseBtn : ""
-    }`;
+  const closeBtnClass = `${styles.closeBtn} ${
+    isNavbarOpen ? styles.showCloseBtn : ""
+  }`;
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white" style={{ boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}>
       <div className="container-fluid">
-        <a className="navbar-brand" href="#">
+        <Link className="navbar-brand" to="/">
+          <p>Jaytech printers</p>
           <img
             src={`${API_BASE_URL}/uploads/logo.png`}
-            alt="Logo"
+            alt="JayTeach"
             className="d-inline-block align-middle"
-            style={{ height: "50px" }}
           />
-        </a>
+        </Link>
 
         {/* Cart icon in mobile view */}
         <div className="d-flex align-items-center ms-auto d-lg-none position-relative">

@@ -1,3 +1,4 @@
+/* Original styles */
 :global(.navbar-light .navbar-nav .nav-link) {
   color: black;
 }
@@ -15,13 +16,73 @@
   color: #ff6347;
 }
 
+/* Logo and brand name styling */
+:global(.navbar-brand) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+:global(.navbar-brand p) {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.8rem;
+  background: linear-gradient(45deg, #2e58a6, #ffcc00);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+:global(.navbar-brand img) {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  max-height: 50px;
+  width: auto;
+}
+
 @media (min-width: 992px) {
   :global(.navbar-nav) {
     justify-content: flex-end;
   }
+  
+  :global(.navbar-brand img) {
+    max-height: 50px;
+  }
+  
+  :global(.navbar-brand:hover p) {
+    transform: translateY(-2px);
+  }
+  
+  :global(.navbar-brand:hover img) {
+    transform: scale(1.05);
+  }
 }
 
 @media (max-width: 991px) {
+  :global(.navbar) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  
+  :global(.navbar-brand p) {
+    display: none;
+  }
+  
+  :global(.navbar-brand img) {
+    max-height: 40px;
+    margin: 0 auto;
+  }
+  
   :global(.navbar-collapse) {
     position: fixed;
     top: 0;
@@ -84,6 +145,13 @@
   }
 }
 
+/* Additional smaller screen adjustments */
+@media (max-width: 576px) {
+  :global(.navbar-brand img) {
+    max-height: 35px;
+  }
+}
+
 .cartIconBadge {
   font-size: 0.8rem;
   width: 18px;
@@ -98,17 +166,17 @@
 }
 
 .cartIconBadge1 {
-    font-size: 0.8rem;
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 4px;
-    right: 0px;
-  }
+  font-size: 0.8rem;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 4px;
+  right: 0px;
+}
 
 .closeBtn {
   display: none;
@@ -125,5 +193,3 @@
 .showCloseBtn {
   display: block;
 }
-
-

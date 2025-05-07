@@ -1,0 +1,115 @@
+.top-header {
+    background: linear-gradient(90deg, #1976D2, #2196F3);
+    padding: 10px 0;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: none; /* Hidden by default on small screens */
+  }
+  
+  /* Only show on larger screens */
+  @media (min-width: 576px) {
+    .top-header {
+      display: block;
+    }
+  }
+  
+  /* Ensure it stays hidden on small screens */
+  @media (max-width: 575.98px) {
+    .top-header {
+      display: none;
+    }
+  }
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .contact-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .icon {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+  }
+  
+  .info-text {
+    font-weight: 500;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.95);
+    white-space: nowrap;
+  }
+  
+  .social-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .social-icon {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .social-icon:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 767.98px) {
+    .header-content {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .contact-info {
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .contact-item {
+      justify-content: center;
+    }
+    
+    .social-links {
+      justify-content: center;
+    }
+  }
+  
+  /* Fixing specific issues on medium screens */
+  @media (min-width: 576px) and (max-width: 767.98px) {
+    .contact-info {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .social-links {
+      width: 100%;
+      justify-content: center;
+      margin-top: 10px;
+    }
+  }

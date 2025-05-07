@@ -1,9 +1,11 @@
-// pages/printer-types/PrinterTypes.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/common';
 import axios from 'axios';
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaChevronUp, FaChevronDown, FaCheck } from 'react-icons/fa';
 import '../styles/Admin/PrinterTypes.css';
+import { API_BASE_URL } from '../api/main';
+import { UserContext } from '../contexts/UserContext';
+import { toast } from 'react-toastify';
 
 interface PrinterType {
   id: number;
@@ -12,6 +14,7 @@ interface PrinterType {
 }
 
 const PrinterTypes: React.FC = () => {
+  const { token } = useContext(UserContext) || {};
   const [printerTypes, setPrinterTypes] = useState<PrinterType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +30,6 @@ const PrinterTypes: React.FC = () => {
   });
 
   // API URLs
-  const API_BASE_URL = 'http://127.0.0.1:5000/api';
   const PRINTER_TYPES_URL = `${API_BASE_URL}/printer-types`;
 
   const fetchPrinterTypes = async () => {
@@ -61,7 +63,7 @@ const PrinterTypes: React.FC = () => {
 
   useEffect(() => {
     fetchPrinterTypes();
-  }, []);
+  }, [token]);
 
   // When a printer type is expanded, fetch its details
   useEffect(() => {
@@ -101,10 +103,13 @@ const PrinterTypes: React.FC = () => {
   const handleDelete = async (typeId: number) => {
     if (window.confirm('Are you sure you want to delete this printer type?')) {
       try {
-        await axios.delete(`${PRINTER_TYPES_URL}/${typeId}`);
-        fetchPrinterTypes(); // Refresh the list after deletion
+        await axios.delete(`${PRINTER_TYPES_URL}/${typeId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        fetchPrinterTypes(); 
+        toast.success('Printer type deleted successfully!');
       } catch (error) {
-        console.error('Error deleting printer type:', error);
+        toast.error('Cannot delete Printer Type with associated categories');
         setError('Failed to delete printer type. Please try again.');
       }
     }
@@ -118,10 +123,16 @@ const PrinterTypes: React.FC = () => {
     try {
       if (editingType) {
         // Update existing printer type
-        await axios.put(`${PRINTER_TYPES_URL}/${editingType.id}`, formData);
+        await axios.put(`${PRINTER_TYPES_URL}/${editingType.id}`, formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Printer type updated successfully!');
       } else {
         // Add new printer type
-        await axios.post(PRINTER_TYPES_URL, formData);
+        await axios.post(PRINTER_TYPES_URL, formData, 
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Printer type created successfully!');
       }
       
       setShowAddModal(false);
@@ -129,6 +140,7 @@ const PrinterTypes: React.FC = () => {
     } catch (error) {
       console.error('Error saving printer type:', error);
       setError('Failed to save printer type. Please check your inputs and try again.');
+      toast.error('Failed to save printer type.');
     } finally {
       setIsSubmitting(false);
     }

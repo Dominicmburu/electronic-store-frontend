@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useSidebarContext } from '../Context/SidebarContext';
-import { useAuth } from '../Context/useAuth';
 import '../../../styles/Admin/Header.css';
 import { FaBars, FaSearch, FaBell, FaShoppingCart, FaMoneyBillAlt, FaEnvelope, FaUser, FaCog, FaSignOutAlt, FaList } from 'react-icons/fa';
 

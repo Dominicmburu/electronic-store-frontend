@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductSpecifications } from '../Services/ProductService';
 import '../../../styles/Admin/ProductForm.css';
+import { API_BASE_URL } from '../../../api/main';
+import { FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
+import axios from 'axios';
 
 interface ProductFormProps {
   product: Product | null;
@@ -14,9 +17,10 @@ interface SpecificationEntry {
   value: string;
 }
 
-interface CategoryOption {
+interface Category {
   id: number;
   name: string;
+  description: string;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, isSubmitting }) => {
@@ -26,7 +30,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     lastPrice: 0,
     currentPrice: 0,
     stockQuantity: 0,
-    categoryId: 1,
+    categoryId: 0,
     isFeatured: false
   });
 
@@ -38,14 +42,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
   const [imagesToUpload, setImagesToUpload] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imageErrors, setImageErrors] = useState<string[]>([]);
-
-  const [categories, setCategories] = useState<CategoryOption[]>([
-    { id: 1, name: 'Inkjet Printers' },
-    { id: 2, name: 'Laser Printers' },
-    { id: 3, name: '3D Printers' },
-    { id: 4, name: 'Accessories' },
-    { id: 5, name: 'Inks & Toners' }
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -77,12 +76,31 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     }
   }, [product]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/categories`);
+        const data = Array.isArray(response.data) ? response.data : response.data.categories || [];
+        setCategories(data);
+      } catch (err) {
+        setError('Could not load categories.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData({ ...formData, [name]: checked });
+    } else if (name === 'categoryId') {
+      const numericValue = Number(value);
+      setFormData({ ...formData, [name]: numericValue });
     } else if (type === 'number') {
       setFormData({ ...formData, [name]: parseFloat(value) || 0 });
     } else {
@@ -160,33 +178,116 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
     setExistingImages(updatedImages);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
+    const { name, description, lastPrice, currentPrice, stockQuantity } = formData;
 
-    if (!formData.name || !formData.description || formData.currentPrice <= 0) {
-      alert('Please fill in all required fields.');
-      return;
+    if (name.length < 4 || name.length > 100) {
+      alert("Name must be between 4 and 100 characters.");
+      return false;
     }
 
-    const specificationsObject: ProductSpecifications = {};
-    specifications.forEach((spec) => {
-      if (spec.key.trim() && spec.value.trim()) {
-        specificationsObject[spec.key.trim()] = spec.value.trim();
-      }
-    });
+    if (description.length < 10 || description.length > 1000) {
+      alert("Description must be between 10 and 1000 characters.");
+      return false;
+    }
 
-    const productData = {
-      ...formData,
-      specifications: specificationsObject,
-      images: existingImages,
-      newImages: imagesToUpload
-    };
+    if (!Number.isInteger(lastPrice) || lastPrice <= 0) {
+      alert("Original Price must be a positive whole number.");
+      return false;
+    }
 
-    onSubmit(productData);
+    if (!Number.isInteger(currentPrice) || currentPrice <= 0) {
+      alert("Current Price must be a positive whole number.");
+      return false;
+    }
+
+    if (stockQuantity < 0) {
+      alert("Stock Quantity cannot be negative.");
+      return false;
+    }
+
+    if (imagesToUpload.length === 0 && existingImages.length === 0) {
+      alert("At least one image must be uploaded.");
+      return false;
+    }
+
+    if (specifications.some(spec => !spec.key.trim() || !spec.value.trim())) {
+      alert("All specifications must have both key and value.");
+      return false;
+    }
+
+    return true;
   };
 
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!validateForm()) return;
+
+  //   const finalFormData = {
+  //     ...formData,
+  //     categoryId: Number(formData.categoryId)
+  //   };
+
+  //   const specificationsObject: ProductSpecifications = {};
+  //   specifications.forEach((spec) => {
+  //     if (spec.key.trim() && spec.value.trim()) {
+  //       specificationsObject[spec.key.trim()] = spec.value.trim();
+  //     }
+  //   });
+
+  //   const productData = {
+  //     ...finalFormData,
+  //     specifications: specificationsObject,
+  //     images: existingImages,
+  //     newImages: imagesToUpload
+  //   };
+
+  //   onSubmit(productData);
+  // };
+// Corrected handleSubmit function for ProductForm.tsx
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!validateForm()) return;
+
+  const submitFormData = new FormData();
+
+  // Add basic product information
+  submitFormData.append('name', formData.name.toString());
+  submitFormData.append('description', formData.description.toString());
+  submitFormData.append('lastPrice', formData.lastPrice.toString());
+  submitFormData.append('currentPrice', formData.currentPrice.toString());
+  submitFormData.append('stockQuantity', formData.stockQuantity.toString());
+  submitFormData.append('categoryId', formData.categoryId.toString());
+  submitFormData.append('isFeatured', formData.isFeatured.toString());
+
+  // Handle specifications - convert object to JSON string
+  const specificationsObject: ProductSpecifications = {};
+  specifications.forEach(spec => {
+    if (spec.key.trim() && spec.value.trim()) {
+      specificationsObject[spec.key.trim()] = spec.value.trim();
+    }
+  });
+  submitFormData.append('specifications', JSON.stringify(specificationsObject));
+
+  // Handle existing images - convert array to JSON string
+  if (existingImages.length > 0) {
+    submitFormData.append('existingImages', JSON.stringify(existingImages));
+  }
+
+  // Handle new images
+  if (imagesToUpload.length > 0) {
+    imagesToUpload.forEach(file => {
+      submitFormData.append('images', file);
+    });
+  }
+
+  onSubmit(submitFormData);
+};
+
   const getImageUrl = (imageName: string) => {
-    return imageName.startsWith('http') ? imageName : `/uploads/${imageName}`;
+    return imageName.startsWith('http') ? imageName : `${API_BASE_URL}/uploads/${imageName}`;
   };
 
   return (
@@ -303,6 +404,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                           onChange={handleInputChange}
                           required
                         >
+                          <option value="">Select a category</option>
                           {categories.map((category) => (
                             <option key={category.id} value={category.id}>
                               {category.name}
@@ -349,10 +451,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                                 />
                                 <button
                                   type="button"
-                                  className="btn btn-sm btn-danger image-remove-btn"
+                                  className="btn-sm btn-danger image-remove-btn"
                                   onClick={() => removeExistingImage(index)}
                                 >
-                                  <i className="material-icons">close</i>
+                                  <FaTimes />
                                 </button>
                               </div>
                             ))}
@@ -387,10 +489,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                                 <img src={preview} alt={`Upload ${index + 1}`} className="image-preview" />
                                 <button
                                   type="button"
-                                  className="btn btn-sm btn-danger image-remove-btn"
+                                  className=" btn-sm btn-danger image-remove-btn"
                                   onClick={() => removeUploadImage(index)}
                                 >
-                                  <i className="material-icons">close</i>
+                                  <FaTimes />
                                 </button>
                               </div>
                             ))}
@@ -444,7 +546,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                         onClick={() => removeSpecification(index)}
                         disabled={specifications.length === 1}
                       >
-                        <i className="material-icons">delete</i>
+                        <FaTrash />
                       </button>
                     </div>
                   </div>
@@ -455,7 +557,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, 
                   className="btn btn-outline-primary mt-2"
                   onClick={addSpecification}
                 >
-                  <i className="material-icons mr-1">add</i> Add Specification
+                  <FaPlus className="mr-1" /> Add Specification
                 </button>
               </div>
             </div>

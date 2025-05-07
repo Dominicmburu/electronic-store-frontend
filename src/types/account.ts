@@ -9,6 +9,8 @@ export interface User {
     paymentMethods: PaymentMethod[];
     wishlist: number[]; // Array of Product IDs
     settings: AccountSettings;
+    createdAt: string;
+    updatedAt: string;
   }
   
   export interface Order {

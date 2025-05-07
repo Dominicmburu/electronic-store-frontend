@@ -4,7 +4,7 @@ import { PageHeader, DashboardCard, LoadingSpinner } from '../components/Admin/c
 import '../styles/Admin/Customers.css';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaPlus, FaSearch, FaEye, FaEdit, FaCheck, FaBan, FaTrash, FaUser } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEye, FaEdit, FaCheck, FaBan, FaTrash, FaUser, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { API_BASE_URL } from '../api/main';
 import { UserContext } from '../contexts/UserContext';
 
@@ -33,8 +33,7 @@ const Customers: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  
-  // New state for the user creation/editing modal
+
   const [showUserModal, setShowUserModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +46,6 @@ const Customers: React.FC = () => {
     role: 'USER'
   });
 
-  // API base URL
   useEffect(() => {
     fetchUsers(currentPage);
   }, [currentPage, currentStatus, token]);
@@ -55,7 +53,7 @@ const Customers: React.FC = () => {
   const fetchUsers = async (page: number) => {
     setIsLoading(true);
     try {
-      const response = await axios.get<UserResponse>(`${API_BASE_URL}/admin/users`, {
+      const response = await axios.get(`${API_BASE_URL}/admin/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -70,6 +68,7 @@ const Customers: React.FC = () => {
     }
   };
 
+  // In Customers.tsx
   const fetchUserDetails = async (userId: number) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/admin/users/${userId}`, {
@@ -77,11 +76,12 @@ const Customers: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setSelectedUser(response.data);
+      setSelectedUser(response.data.user);
       setShowDetailModal(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user details:', error);
-      toast.error('Failed to load user details. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to load user details. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
@@ -94,12 +94,12 @@ const Customers: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       // Update local state
-      setUsers(users.map(user => 
+      setUsers(users.map(user =>
         user.id === userId ? { ...user, isActive: !isActive } : user
       ));
-      
+
       toast.success(`User ${!isActive ? 'activated' : 'deactivated'} successfully!`);
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -114,12 +114,12 @@ const Customers: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       // Update local state
-      setUsers(users.map(user => 
+      setUsers(users.map(user =>
         user.id === userId ? { ...user, isActive: false } : user
       ));
-      
+
       toast.success('User deactivated successfully!');
     } catch (error) {
       console.error('Error deactivating user:', error);
@@ -131,15 +131,15 @@ const Customers: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       if (isEditing && selectedUser) {
-        // Update user
-        await axios.put(`${API_BASE_URL}/admin/${selectedUser.id}`, {
+        await axios.put(`${API_BASE_URL}/admin/users/${selectedUser.id}`, {
           name: formData.name,
           email: formData.email,
           phoneNumber: formData.phoneNumber,
-          password: formData.password || undefined // Only send password if provided
+          role: formData.role,
+          // password: formData.password || undefined // Only send password if provided (if your backend supports this)
         }, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,16 +147,18 @@ const Customers: React.FC = () => {
         });
         toast.success('User updated successfully!');
       } else {
-        // Create new user/admin
-        await axios.post(`${API_BASE_URL}/admin/register`, formData, {
+        const endpoint = formData.role === 'ADMIN'
+          ? `${API_BASE_URL}/admin/register`
+          : `${API_BASE_URL}/admin/users`;
+
+        await axios.post(endpoint, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         toast.success('User created successfully!');
       }
-      
-      // Close modal and refresh data
+
       setShowUserModal(false);
       fetchUsers(currentPage);
     } catch (error: any) {
@@ -201,15 +203,16 @@ const Customers: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          String(user.id).includes(searchTerm);
-    const matchesStatus = currentStatus === 'all' || 
-                          (currentStatus === 'active' && user.isActive) ||
-                          (currentStatus === 'inactive' && !user.isActive);
-    
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(user.id).includes(searchTerm);
+    const matchesStatus = currentStatus === 'all' ||
+      (currentStatus === 'active' && user.isActive) ||
+      (currentStatus === 'inactive' && !user.isActive);
+      
     return matchesSearch && matchesStatus;
   });
 
@@ -221,8 +224,8 @@ const Customers: React.FC = () => {
 
   return (
     <div className="customers-container">
-      <PageHeader 
-        title="Users Management" 
+      <PageHeader
+        title="Users Management"
         subtitle="Manage your user accounts"
         actions={
           <button className="btn btn-success" onClick={openCreateModal}>
@@ -230,7 +233,7 @@ const Customers: React.FC = () => {
           </button>
         }
       />
-      
+
       <div className="row mb-4">
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-primary shadow h-100 py-2">
@@ -251,7 +254,7 @@ const Customers: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-success shadow h-100 py-2">
             <div className="card-body">
@@ -271,7 +274,7 @@ const Customers: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-info shadow h-100 py-2">
             <div className="card-body">
@@ -291,7 +294,7 @@ const Customers: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-warning shadow h-100 py-2">
             <div className="card-body">
@@ -312,7 +315,7 @@ const Customers: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       <DashboardCard title='User List' className="mb-4">
         <div className="customer-filters mb-4">
           <div className="row align-items-center">
@@ -337,7 +340,7 @@ const Customers: React.FC = () => {
             <div className="col-md-6">
               <div className="d-flex justify-content-md-end">
                 <div className="btn-group">
-                  <button 
+                  <button
                     className={`btn ${currentStatus === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => {
                       setCurrentStatus('all');
@@ -345,7 +348,7 @@ const Customers: React.FC = () => {
                   >
                     All
                   </button>
-                  <button 
+                  <button
                     className={`btn ${currentStatus === 'active' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => {
                       setCurrentStatus('active');
@@ -353,7 +356,7 @@ const Customers: React.FC = () => {
                   >
                     Active
                   </button>
-                  <button 
+                  <button
                     className={`btn ${currentStatus === 'inactive' ? 'btn-primary' : 'btn-outline-primary'}`}
                     onClick={() => {
                       setCurrentStatus('inactive');
@@ -392,7 +395,7 @@ const Customers: React.FC = () => {
                     <tr key={user.id}>
                       <td><strong>{user.id}</strong></td>
                       <td>{user.name}</td>
-                      <td>{user.email}</td>
+                      <td>{user.email}</td>                      
                       <td>
                         <span className={`badge ${user.role === 'ADMIN' ? 'badge-info' : 'badge-primary'}`}>
                           {user.role}
@@ -405,21 +408,21 @@ const Customers: React.FC = () => {
                       </td>
                       <td>
                         <div className="btn-group">
-                          <button 
+                          <button
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => fetchUserDetails(user.id)}
                             title="View Details"
                           >
                             <FaEye />
                           </button>
-                          <button 
+                          <button
                             className="btn btn-sm btn-outline-info"
                             onClick={() => openEditModal(user)}
                             title="Edit User"
                           >
                             <FaEdit />
                           </button>
-                          <button 
+                          <button
                             className="btn btn-sm btn-outline-success"
                             onClick={() => handleUpdateStatus(user.id, user.isActive)}
                             title={user.isActive ? 'Deactivate User' : 'Activate User'}
@@ -440,7 +443,7 @@ const Customers: React.FC = () => {
               </div>
               <ul className="pagination">
                 <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button 
+                  <button
                     className="page-link"
                     onClick={() => paginate(currentPage - 1)}
                     disabled={currentPage === 1}
@@ -449,14 +452,14 @@ const Customers: React.FC = () => {
                   </button>
                 </li>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = currentPage > 3 ? 
-                    (currentPage + i > totalPages ? totalPages - 4 + i : currentPage - 2 + i) : 
+                  const pageNum = currentPage > 3 ?
+                    (currentPage + i > totalPages ? totalPages - 4 + i : currentPage - 2 + i) :
                     i + 1;
-                  
+
                   if (pageNum <= totalPages && pageNum > 0) {
                     return (
                       <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                        <button 
+                        <button
                           className="page-link"
                           onClick={() => paginate(pageNum)}
                         >
@@ -468,7 +471,7 @@ const Customers: React.FC = () => {
                   return null;
                 })}
                 <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                  <button 
+                  <button
                     className="page-link"
                     onClick={() => paginate(currentPage + 1)}
                     disabled={currentPage === totalPages}
@@ -487,32 +490,35 @@ const Customers: React.FC = () => {
         <div className="modal fade show" style={{ display: 'block' }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">User Details</h5>
+              <div className="modal-header border-bottom-0 pb-1">
+                <h5 className="modal-title font-weight-bold">User Profile</h5>
                 <button type="button" className="close" onClick={() => setShowDetailModal(false)}>
                   <span>&times;</span>
                 </button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body pt-0">
                 <div className="row">
                   <div className="col-md-4 text-center mb-4 mb-md-0">
-                    <div className="customer-profile-image mb-3">
-                      <FaUser style={{ fontSize: '5rem' }} className="text-primary" />
+                    <div className="customer-profile-image mb-3 d-flex align-items-center justify-content-center">
+                      <div className="rounded-circle bg-primary-light d-flex align-items-center justify-content-center" style={{ width: '120px', height: '120px' }}>
+                        <FaUser style={{ fontSize: '3.5rem' }} className="text-primary" />
+                      </div>
                     </div>
-                    <h5>{selectedUser.name}</h5>
-                    <span className={`badge ${selectedUser.isActive ? 'badge-success' : 'badge-secondary'} mb-3`}>
-                      {selectedUser.isActive ? 'Active' : 'Inactive'}
+                    <h4 className="font-weight-bold mb-1">{selectedUser.name}</h4>
+                    <p className="text-muted mb-2">{selectedUser.email}</p>
+                    <span className={`badge ${selectedUser.isActive ? 'badge-success' : 'badge-secondary'} px-3 py-2 mb-3 rounded-pill`}>
+                      {selectedUser.isActive ? '● Active' : '● Inactive'}
                     </span>
-                    <div className="btn-group mt-3">
-                      <a 
-                        href={`mailto:${selectedUser.email}`} 
-                        className="btn btn-sm btn-outline-primary"
+                    <div className="d-flex justify-content-center gap-2 mt-3">
+                      <a
+                        href={`mailto:${selectedUser.email}`}
+                        className="btn btn-outline-primary rounded-pill px-4"
                         title="Send Email"
                       >
-                        <FaEdit className="mr-1" /> Email
+                        <FaEnvelope className="mr-1" /> Email
                       </a>
-                      <button 
-                        className="btn btn-sm btn-outline-success" 
+                      <button
+                        className="btn btn-outline-success rounded-pill px-4"
                         onClick={() => openEditModal(selectedUser)}
                         title="Edit User"
                       >
@@ -521,71 +527,73 @@ const Customers: React.FC = () => {
                     </div>
                   </div>
                   <div className="col-md-8">
-                    <div className="customer-info">
-                      <h6 className="border-bottom pb-2">User Information</h6>
-                      <div className="row mb-3">
-                        <div className="col-sm-4 text-sm-right">
-                          <strong>ID:</strong>
-                        </div>
-                        <div className="col-sm-8">
-                          {selectedUser.id}
-                        </div>
-                      </div>
-                      <div className="row mb-3">
-                        <div className="col-sm-4 text-sm-right">
-                          <strong>Email:</strong>
-                        </div>
-                        <div className="col-sm-8">
-                          <a href={`mailto:${selectedUser.email}`}>{selectedUser.email}</a>
-                        </div>
-                      </div>
-                      <div className="row mb-3">
-                        <div className="col-sm-4 text-sm-right">
-                          <strong>Role:</strong>
-                        </div>
-                        <div className="col-sm-8">
-                          <span className={`badge ${selectedUser.role === 'ADMIN' ? 'badge-info' : 'badge-primary'}`}>
-                            {selectedUser.role}
-                          </span>
-                        </div>
-                      </div>
-                      {selectedUser.phoneNumber && (
-                        <div className="row mb-4">
-                          <div className="col-sm-4 text-sm-right">
-                            <strong>Phone:</strong>
+                    <div className="card border-0 shadow-sm h-100">
+                      <div className="card-body">
+                        <h6 className="text-uppercase font-weight-bold text-muted mb-3 border-bottom pb-2">
+                          User Information
+                        </h6>
+                        <div className="user-details">
+                          <div className="detail-item mb-3">
+                            <label className="font-weight-bold mb-1 d-block">User ID</label>
+                            <p className="mb-0 text-muted">#{selectedUser.id}</p>
                           </div>
-                          <div className="col-sm-8">
-                            <a href={`tel:${selectedUser.phoneNumber}`}>{selectedUser.phoneNumber}</a>
+                          <div className="detail-item mb-3">
+                            <label className="font-weight-bold mb-1 d-block">Email Address</label>
+                            <p className="mb-0">
+                              <a href={`mailto:${selectedUser.email}`} className="text-primary">
+                                <FaEnvelope className="mr-1" />{selectedUser.email}
+                              </a>
+                            </p>
                           </div>
+                          <div className="detail-item mb-3">
+                            <label className="font-weight-bold mb-1 d-block">Role</label>
+                            <span className={`badge ${selectedUser.role === 'ADMIN' ? 'badge-info' : 'badge-primary'} px-3 py-2 rounded-pill`}>
+                              {selectedUser.role}
+                            </span>
+                          </div>
+                          {selectedUser.phoneNumber && (
+                            <div className="detail-item mb-3">
+                              <label className="font-weight-bold mb-1 d-block">Phone Number</label>
+                              <p className="mb-0">
+                                <a href={`tel:${selectedUser.phoneNumber}`} className="text-primary">
+                                  <FaPhone className="mr-1" />{selectedUser.phoneNumber}
+                                </a>
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-danger" 
-                  onClick={() => {
-                    handleDeactivateUser(selectedUser.id);
-                    setShowDetailModal(false);
-                  }}
+              <div className="modal-footer border-top mt-3">
+                <button
+                  type="button"
+                  className="btn btn-light rounded-pill"
+                  onClick={() => setShowDetailModal(false)}
                 >
-                  {selectedUser.isActive ? 'Deactivate User' : 'Delete User'}
+                  Close
                 </button>
-                <button 
-                  type="button" 
-                  className="btn btn-success" 
+                <button
+                  type="button"
+                  className={`btn ${selectedUser.isActive ? 'btn-warning' : 'btn-success'} rounded-pill`}
                   onClick={() => {
                     handleUpdateStatus(selectedUser.id, selectedUser.isActive);
                     setShowDetailModal(false);
                   }}
                 >
-                  {selectedUser.isActive ? 'Set Inactive' : 'Activate User'}
+                  {selectedUser.isActive ? 'Deactivate' : 'Activate'} User
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
-                  Close
+                <button
+                  type="button"
+                  className="btn btn-danger rounded-pill"
+                  onClick={() => {
+                    handleDeactivateUser(selectedUser.id);
+                    setShowDetailModal(false);
+                  }}
+                >
+                  Delete User
                 </button>
               </div>
             </div>
@@ -610,7 +618,7 @@ const Customers: React.FC = () => {
                   {error && (
                     <div className="alert alert-danger">{error}</div>
                   )}
-                  
+
                   <div className="form-group">
                     <label>Name</label>
                     <input
@@ -669,16 +677,16 @@ const Customers: React.FC = () => {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary" 
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
                     onClick={() => setShowUserModal(false)}
                     disabled={isSubmitting}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-primary"
                     disabled={isSubmitting}
                   >

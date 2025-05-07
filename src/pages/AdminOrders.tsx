@@ -60,9 +60,6 @@ const Orders: React.FC = () => {
   const [newStatus, setNewStatus] = useState('');
   const ordersPerPage = 10;
 
-  console.log(orders);
-  
-
   // Status options for orders
   const statusOptions = [
     'PENDING',
@@ -99,10 +96,16 @@ const Orders: React.FC = () => {
           return order;
         });
 
-        setOrders(ordersWithCalculatedAmount);
-        if (response.data.totalPages) {
-          setTotalPages(response.data.totalPages);
-        }
+        // Sort orders by date (most recent first)
+        const sortedOrders = ordersWithCalculatedAmount.sort((a: { orderDate: string | number | Date; }, b: { orderDate: string | number | Date; }) => {
+          return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime();
+        });
+
+        setOrders(sortedOrders);
+        
+        // Calculate total pages based on filtered results
+        const filteredCount = getFilteredOrders(sortedOrders, currentStatus, searchTerm).length;
+        setTotalPages(Math.ceil(filteredCount / ordersPerPage));
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -110,6 +113,21 @@ const Orders: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Function to get filtered orders based on search and status
+  const getFilteredOrders = (ordersList: Order[], status: string, search: string) => {
+    return ordersList.filter(order => {
+      const matchesSearch =
+        (order.orderNumber && order.orderNumber.toLowerCase().includes(search.toLowerCase())) ||
+        (order.id && typeof order.id === 'string' && order.id.toLowerCase().includes(search.toLowerCase())) ||
+        (order.customerName && order.customerName.toLowerCase().includes(search.toLowerCase()));
+
+      const matchesStatus = status === 'all' ||
+        (order.status && order.status.toLowerCase() === status.toLowerCase());
+
+      return matchesSearch && matchesStatus;
+    });
   };
 
   const getOrderDetails = async (orderId: string) => {
@@ -170,7 +188,6 @@ const Orders: React.FC = () => {
       toast.success(`Order status updated to ${newStatus}`);
       setShowStatusModal(false);
     } catch (error) {
-      // console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
     } finally {
       setStatusUpdateLoading(false);
@@ -200,7 +217,6 @@ const Orders: React.FC = () => {
 
       toast.success('Order cancelled successfully');
     } catch (error) {
-      // console.error('Error cancelling order:', error);
       toast.error('Failed to cancel order');
     }
   };
@@ -255,18 +271,10 @@ const Orders: React.FC = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch =
-      (order.orderNumber && order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (order.id && typeof order.id === 'string' && order.id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (order.customerName && order.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Get filtered orders based on search term and status filter
+  const filteredOrders = getFilteredOrders(orders, currentStatus, searchTerm);
 
-    const matchesStatus = currentStatus === 'all' ||
-      (order.status && order.status.toLowerCase() === currentStatus.toLowerCase());
-
-    return matchesSearch && matchesStatus;
-  });
-
+  // Pagination logic
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -276,7 +284,24 @@ const Orders: React.FC = () => {
     return sum + orderAmount;
   }, 0);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  // Update paginate function to handle pagination properly
+  const paginate = (pageNumber: number) => {
+    // Ensure page number is within valid range
+    const validPageNumber = Math.max(1, Math.min(pageNumber, totalPages));
+    setCurrentPage(validPageNumber);
+  };
+
+  // Recalculate total pages when filters change
+  useEffect(() => {
+    const filteredCount = filteredOrders.length;
+    const calculatedTotalPages = Math.max(1, Math.ceil(filteredCount / ordersPerPage));
+    setTotalPages(calculatedTotalPages);
+    
+    // Reset to page 1 if current page is out of bounds
+    if (currentPage > calculatedTotalPages) {
+      setCurrentPage(1);
+    }
+  }, [filteredOrders.length, searchTerm, currentStatus]);
 
   if (isLoading && orders.length === 0) {
     return <LoadingSpinner />;
@@ -485,13 +510,13 @@ const Orders: React.FC = () => {
                           >
                             <FaSync />
                           </button>
-                          <button
+                          {/* <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => cancelOrder(order.id, order.orderNumber || order.id)}
                             title="Cancel order"
                           >
                             <FaTrash />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -500,50 +525,76 @@ const Orders: React.FC = () => {
               </table>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap">
-              <div className="mb-2 mb-md-0">
-                Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap">
+                <div className="mb-2 mb-md-0">
+                  Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders
+                </div>
+                <ul className="pagination">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                  </li>
+                  
+                  {(() => {
+                    let pageNumbers = [];
+                    let startPage: number;
+                    let endPage: number;
+                    
+                    if (totalPages <= 5) {
+                      // If total pages is 5 or less, show all page numbers
+                      startPage = 1;
+                      endPage = totalPages;
+                    } else {
+                      // More than 5 pages, we need to calculate what to show
+                      if (currentPage <= 3) {
+                        // Near the start
+                        startPage = 1;
+                        endPage = 5;
+                      } else if (currentPage + 2 >= totalPages) {
+                        // Near the end
+                        startPage = totalPages - 4;
+                        endPage = totalPages;
+                      } else {
+                        // Somewhere in the middle
+                        startPage = currentPage - 2;
+                        endPage = currentPage + 2;
+                      }
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pageNumbers.push(
+                        <li key={i} className={`page-item ${currentPage === i ? 'active' : ''}`}>
+                          <button
+                            className="page-link"
+                            onClick={() => paginate(i)}
+                          >
+                            {i}
+                          </button>
+                        </li>
+                      );
+                    }
+                    
+                    return pageNumbers;
+                  })()}
+                  
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
               </div>
-              <ul className="pagination">
-                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button
-                    className="page-link"
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </button>
-                </li>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = currentPage > 3 ?
-                    (currentPage + i > totalPages ? totalPages - 4 + i : currentPage - 2 + i) :
-                    i + 1;
-
-                  if (pageNum <= totalPages && pageNum > 0) {
-                    return (
-                      <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                        <button
-                          className="page-link"
-                          onClick={() => paginate(pageNum)}
-                        >
-                          {pageNum}
-                        </button>
-                      </li>
-                    );
-                  }
-                  return null;
-                })}
-                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                  <button
-                    className="page-link"
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
-                </li>
-              </ul>
-            </div>
+            )}
           </>
         )}
       </DashboardCard>
@@ -664,7 +715,7 @@ const Orders: React.FC = () => {
                   type="button"
                   className="btn btn-danger mr-auto"
                   onClick={() => {
-                    cancelOrder(selectedOrder.orderNumber, selectedOrder.orderNumber || selectedOrder.orderNumber);
+                    cancelOrder(selectedOrder.id, selectedOrder.orderNumber || selectedOrder.id);
                     setShowDetailModal(false);
                   }}
                 >
@@ -764,31 +815,5 @@ function getNextStatus(currentStatus: string): string {
 
   return statusFlow[currentStatus?.toUpperCase()] || 'PROCESSING';
 }
-
-// Add this CSS at the bottom of your Orders.css file
-/*
-@media (max-width: 768px) {
-  .status-filter {
-    margin-top: 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  
-  .status-filter .btn {
-    flex: 1;
-    padding: 0.375rem 0.5rem;
-    font-size: 0.875rem;
-  }
-  
-  .table-responsive {
-    font-size: 0.875rem;
-  }
-  
-  .btn-group .btn-sm {
-    padding: 0.25rem 0.4rem;
-  }
-}
-*/
 
 export default Orders;

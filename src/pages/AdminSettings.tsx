@@ -5,105 +5,33 @@ import { UserContext } from '../contexts/UserContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../api/main';
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaUserEdit, FaSave, FaEye, FaEyeSlash } from 'react-icons/fa';
-
-interface AdminProfile {
-  id: number;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  role: string;
-  createdAt: string;
-  lastLogin?: string;
-}
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaSave, FaEye, FaEyeSlash, FaBan } from 'react-icons/fa';
+import '../styles/Admin/Settings.css'
 
 const AdminSettings: React.FC = () => {
-  const { token, user } = useContext(UserContext) || {};
-  const [profile, setProfile] = useState<AdminProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const userContext = useContext(UserContext);
+  const { token, profile } = userContext || {};
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // Form state
+  // Form state - only password fields are editable
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
   
-  // Validation state
+  // Validation state - only for password fields
   const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  useEffect(() => {
-    fetchAdminProfile();
-  }, []);
-
-  const fetchAdminProfile = async () => {
-    setIsLoading(true);
-    try {
-      // If we have user ID from context, use it, otherwise default to 3 from the example
-      const adminId = user?.id || 3;
-      
-      const response = await axios.get(`${API_BASE_URL}/admin/${adminId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      if (response.data) {
-        setProfile(response.data);
-        // Initialize form data
-        setFormData({
-          name: response.data.name || '',
-          email: response.data.email || '',
-          phoneNumber: response.data.phoneNumber || '',
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching admin profile:', error);
-      toast.error('Failed to load profile. Please try again.');
-      
-      // For demo purposes, set dummy data if API fails
-      const dummyProfile = {
-        id: 3,
-        name: "Admin User",
-        email: "admin@gmail.com",
-        phoneNumber: "0706526569",
-        role: "Super Admin",
-        createdAt: "2023-09-15T08:30:00",
-        lastLogin: "2023-10-30T14:22:15"
-      };
-      
-      setProfile(dummyProfile);
-      setFormData({
-        name: dummyProfile.name,
-        email: dummyProfile.email,
-        phoneNumber: dummyProfile.phoneNumber,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
+  const handlePasswordInputChange = (field: string, value: string) => {
     setFormData({
       ...formData,
       [field]: value
@@ -120,38 +48,14 @@ const AdminSettings: React.FC = () => {
     setHasChanges(true);
   };
 
-  const validateForm = () => {
+  const validatePasswordForm = () => {
     const newErrors = {
-      name: '',
-      email: '',
-      phoneNumber: '',
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     };
     
     let isValid = true;
-    
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-      isValid = false;
-    }
-    
-    // Email validation
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-      isValid = false;
-    }
-    
-    // Phone validation
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-      isValid = false;
-    }
     
     // Password validation (only if password change is requested)
     if (showPasswordFields) {
@@ -178,27 +82,26 @@ const AdminSettings: React.FC = () => {
     return isValid;
   };
 
-  const handleSaveProfile = async () => {
-    if (!validateForm()) {
+  const handleSavePassword = async () => {
+    if (!validatePasswordForm()) {
       toast.error('Please fix the errors before saving');
+      return;
+    }
+    
+    if (!showPasswordFields) {
+      toast.info('No changes to save');
       return;
     }
     
     setIsSaving(true);
     
     try {
-      const adminId = profile?.id || 3;
+      const adminId = profile?.id;
       
-      // Prepare payload based on whether password is being updated
-      const payload = showPasswordFields ? {
-        name: formData.name,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        password: formData.newPassword
-      } : {
-        name: formData.name,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber
+      // Only send password update
+      const payload = {
+        currentPassword: formData.currentPassword,
+        password: formData.newPassword,
       };
       
       const response = await axios.put(`${API_BASE_URL}/admin/${adminId}`, payload, {
@@ -208,30 +111,22 @@ const AdminSettings: React.FC = () => {
       });
       
       if (response.data) {
-        toast.success('Profile updated successfully!');
+        toast.success('Password updated successfully!');
         setHasChanges(false);
         
         // Reset password fields
         setFormData({
-          ...formData,
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
         
         setShowPasswordFields(false);
-        
-        // Update profile with new data
-        setProfile({
-          ...profile!,
-          name: formData.name,
-          email: formData.email,
-          phoneNumber: formData.phoneNumber
-        });
       }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update password. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -254,7 +149,7 @@ const AdminSettings: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !profile) {
     return <LoadingSpinner />;
   }
 
@@ -266,8 +161,8 @@ const AdminSettings: React.FC = () => {
         actions={
           <button
             className="btn btn-success"
-            onClick={handleSaveProfile}
-            disabled={isSaving || !hasChanges}
+            onClick={handleSavePassword}
+            disabled={isSaving || !hasChanges || !showPasswordFields}
           >
             {isSaving ? (
               <>
@@ -276,7 +171,7 @@ const AdminSettings: React.FC = () => {
               </>
             ) : (
               <>
-                <FaSave className="mr-1" /> Save Changes
+                <FaSave className="mr-1" /> Save Password
               </>
             )}
           </button>
@@ -284,14 +179,15 @@ const AdminSettings: React.FC = () => {
       />
 
       <div className="row">
+        {/* Rest of the component remains the same */}
         <div className="col-lg-4 mb-4">
           <DashboardCard title="Profile Summary">
             <div className="text-center mb-4">
               <div className="avatar-circle mx-auto mb-3">
-                {profile?.name ? profile.name.charAt(0).toUpperCase() : 'A'}
+                {profile.name ? profile.name.charAt(0).toUpperCase() : 'A'}
               </div>
-              <h4>{profile?.name || 'Admin User'}</h4>
-              <span className="badge badge-primary">{profile?.role || 'Administrator'}</span>
+              <h4>{profile.name || 'Admin User'}</h4>
+              <span className="badge badge-primary">Administrator</span>
             </div>
             
             <div className="profile-info">
@@ -299,7 +195,7 @@ const AdminSettings: React.FC = () => {
                 <div className="info-label">Email</div>
                 <div className="info-value">
                   <FaEnvelope className="mr-2" />
-                  {profile?.email || 'admin@example.com'}
+                  {profile.email || 'admin@example.com'}
                 </div>
               </div>
               
@@ -307,21 +203,21 @@ const AdminSettings: React.FC = () => {
                 <div className="info-label">Phone</div>
                 <div className="info-value">
                   <FaPhone className="mr-2" />
-                  {profile?.phoneNumber || 'Not set'}
+                  {profile.phoneNumber || 'Not set'}
                 </div>
               </div>
               
               <div className="profile-info-item">
                 <div className="info-label">Account Created</div>
                 <div className="info-value">
-                  {formatDate(profile?.createdAt)}
+                  {formatDate(profile.createdAt)}
                 </div>
               </div>
               
               <div className="profile-info-item">
-                <div className="info-label">Last Login</div>
+                <div className="info-label">Last Updated</div>
                 <div className="info-value">
-                  {formatDate(profile?.lastLogin)}
+                  {formatDate(profile.updatedAt)}
                 </div>
               </div>
             </div>
@@ -337,14 +233,17 @@ const AdminSettings: React.FC = () => {
                     <label htmlFor="name">
                       <FaUser className="mr-2" /> Full Name
                     </label>
-                    <input
-                      type="text"
-                      className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                    />
-                    {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                    <div className="input-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="name"
+                        value={profile.name || ''}
+                        disabled
+                        readOnly
+                      />                      
+                    </div>
+                    <small className="text-muted">Name cannot be changed</small>
                   </div>
                 </div>
                 
@@ -353,14 +252,17 @@ const AdminSettings: React.FC = () => {
                     <label htmlFor="email">
                       <FaEnvelope className="mr-2" /> Email Address
                     </label>
-                    <input
-                      type="email"
-                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                    />
-                    {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                    <div className="input-group">
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="email"
+                        value={profile.email || ''}
+                        disabled
+                        readOnly
+                      />                      
+                    </div>
+                    <small className="text-muted">Email cannot be changed</small>
                   </div>
                 </div>
               </div>
@@ -371,14 +273,17 @@ const AdminSettings: React.FC = () => {
                     <label htmlFor="phoneNumber">
                       <FaPhone className="mr-2" /> Phone Number
                     </label>
-                    <input
-                      type="text"
-                      className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
-                      id="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    />
-                    {errors.phoneNumber && <div className="invalid-feedback">{errors.phoneNumber}</div>}
+                    <div className="input-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="phoneNumber"
+                        value={profile.phoneNumber || ''}
+                        disabled
+                        readOnly
+                      />                      
+                    </div>
+                    <small className="text-muted">Phone number cannot be changed</small>
                   </div>
                 </div>
               </div>
@@ -408,7 +313,7 @@ const AdminSettings: React.FC = () => {
                             className={`form-control ${errors.currentPassword ? 'is-invalid' : ''}`}
                             id="currentPassword"
                             value={formData.currentPassword}
-                            onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                            onChange={(e) => handlePasswordInputChange('currentPassword', e.target.value)}
                           />
                           <div className="input-group-append">
                             <button 
@@ -435,7 +340,7 @@ const AdminSettings: React.FC = () => {
                             className={`form-control ${errors.newPassword ? 'is-invalid' : ''}`}
                             id="newPassword"
                             value={formData.newPassword}
-                            onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                            onChange={(e) => handlePasswordInputChange('newPassword', e.target.value)}
                           />
                           <div className="input-group-append">
                             <button 
@@ -460,7 +365,7 @@ const AdminSettings: React.FC = () => {
                             className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                             id="confirmPassword"
                             value={formData.confirmPassword}
-                            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                            onChange={(e) => handlePasswordInputChange('confirmPassword', e.target.value)}
                           />
                           <div className="input-group-append">
                             <button 
@@ -484,8 +389,8 @@ const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn-success"
-                    onClick={handleSaveProfile}
-                    disabled={isSaving || !hasChanges}
+                    onClick={handleSavePassword}
+                    disabled={isSaving || !hasChanges || !showPasswordFields}
                   >
                     {isSaving ? (
                       <>
@@ -494,7 +399,7 @@ const AdminSettings: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <FaSave className="mr-1" /> Save Changes
+                        <FaSave className="mr-1" /> Save Password
                       </>
                     )}
                   </button>
@@ -504,55 +409,6 @@ const AdminSettings: React.FC = () => {
           </DashboardCard>
         </div>
       </div>
-
-      {/* Add CSS for avatar and profile styling */}
-      <style jsx>{`
-        .avatar-circle {
-          width: 100px;
-          height: 100px;
-          background-color: #0275d8;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          color: white;
-          font-size: 36px;
-          font-weight: bold;
-        }
-
-        .profile-info {
-          margin-top: 20px;
-        }
-
-        .profile-info-item {
-          margin-bottom: 15px;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #eee;
-        }
-
-        .profile-info-item:last-child {
-          border-bottom: none;
-        }
-
-        .info-label {
-          color: #666;
-          font-size: 14px;
-          margin-bottom: 5px;
-        }
-
-        .info-value {
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-        }
-
-        .password-change-section {
-          background-color: #f8f9fa;
-          padding: 20px;
-          border-radius: 5px;
-          margin-bottom: 20px;
-        }
-      `}</style>
     </div>
   );
 };

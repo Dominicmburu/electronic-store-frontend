@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useSidebarContext } from './Context';
 import { FaChevronLeft, FaChevronRight, FaSignOutAlt } from 'react-icons/fa';
 import '../../styles/Admin/Sidebar.css';
@@ -8,7 +8,8 @@ import { UserContext } from '../../contexts/UserContext';
 
 const Sidebar: React.FC = () => {
   const { isOpen, toggle } = useSidebarContext();
-  const { profile } = useContext(UserContext) || {};
+  const { profile, logout } = useContext(UserContext) || {};
+  const navigate = useNavigate();
 
 
   const navigation = [
@@ -22,6 +23,13 @@ const Sidebar: React.FC = () => {
     { name: 'Reports', path: '/printers/reports', icon: <i className="bi bi-bar-chart" /> },
     { name: 'Profile', path: '/printers/settings', icon: <i className="bi bi-gear" /> },
   ];
+
+  const handleLogout = () => {
+    if (logout) {
+      logout(); 
+      navigate('/my-account');
+    }
+  };
 
   return (
     <aside className={`admin-sidebar ${isOpen ? 'open' : 'closed'}`}>
@@ -83,7 +91,7 @@ const Sidebar: React.FC = () => {
       </div>}
 
       <div className="sidebar-footer">
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout}>
           <FaSignOutAlt />
           {isOpen && <span>Logout</span>}
         </button>
